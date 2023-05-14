@@ -6,13 +6,15 @@ To participtate in [the SantorinAI project](https://github.com/Tomansion/Santori
 
 ## Principles
 
-This AI uses reinforcement learning to learn how to play the game. It is based on the [Q-learning](https://en.wikipedia.org/wiki/Q-learning) algorithm.
+This AI uses reinforcement learning to learn how to play the game.
 
-The ToManTorinAI will be presented with a board state and a set of possible actions. It will then choose an action and receive a reward based on the outcome of the action. The reward will be used to update the Q-table, which is a table that maps board states to actions and their associated rewards. The Q-table is used to choose actions in the future.
+The ToManTorinAI will be presented with a board state and a set of possible actions. It will then choose an action and receive a reward based on the outcome of the action.
 
 ## V1 - DeathCursor
 
 First version of the AI. One model to move and build, input spreaded as much as possible.
+
+Algorithm used : Q value learning
 
 ### Inputs
 
