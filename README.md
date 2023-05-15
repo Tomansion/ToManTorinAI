@@ -10,11 +10,11 @@ This AI uses reinforcement learning to learn how to play the game.
 
 The ToManTorinAI will be presented with a board state and a set of possible actions. It will then choose an action and receive a reward based on the outcome of the action.
 
-## V1 - DeathCursor
+## V2 - DeepInTheQ
 
-First version of the AI. One model to move and build, input spreaded as much as possible.
+Second version of the AI. One model to move, one model to build, input spreaded as much as possible.
 
-Algorithm used : Q value learning
+Algorithm used : DeepQ
 
 ### Inputs
 
@@ -42,6 +42,29 @@ Movements and build vectors:
 - From 8 to 15 : highest output level to build on
 
 
+### Results
 
+WIP
 
+## V1 - MemoNerd
 
+Knows too much and is a jerk about it.
+
+Algorithm used : Q value learning
+
+First try for an AI, set a value for each each possible state and choose the best one.
+
+### Results
+
+```md
+# VS Firsty First
+Player DeathCursor won 4 times (4.0%)
+Player DeathCursor won 6 times (6.0%)
+
+# VS Randy Random
+Player DeathCursor won 48 times (48.0%)
+Player DeathCursor won 46 times (46.0%)
+```
+
+The nerd is not that good, there is too much moves to remember.
+I stoped training after 7mi saved board and during testing, 90% of the time, the AI was playing randomly because it didn't know what to do. 
