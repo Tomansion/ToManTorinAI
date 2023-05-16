@@ -12,9 +12,9 @@ The ToManTorinAI will be presented with a board state and a set of possible acti
 
 ## V2 - DeepInTheQ
 
-Second version of the AI. One model to move, one model to build, input spreaded as much as possible.
+Second version of the AI. One model to move and build, input spreaded as much as possible.
 
-Algorithm used : DeepQ
+Algorithm used : [DQN](https://github.com/tensorflow/agents/blob/master/docs/tutorials/1_dqn_tutorial.ipynb)
 
 ### Inputs
 
