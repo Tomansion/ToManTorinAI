@@ -1,16 +1,16 @@
-from santorinai.tester import Tester
-from santorinai.player_examples.random_player import RandomPlayer
-from santorinai.player_examples.first_choice_player import FirstChoicePlayer
+import numpy as np
+import matplotlib.pyplot as plt
 
-# Init the tester
-tester = Tester()
-tester.verbose_level = 2 # 0: no output, 1: Each game results, 2: Each move summary
-tester.delay_between_moves = 1 # Delay between each move in seconds
-tester.display_board = True # Display a graphical view of the board in a window
+# Change the QT backend to avoid crashing on Mac
+import matplotlib
+matplotlib.use('GTK3Agg')
 
-# Init the players
-my_player = FirstChoicePlayer()
-random_payer = RandomPlayer()
 
-# Play 100 games
-tester.play_1v1(my_player, random_payer, nb_games=100)
+plt.axis([0, 10, 0, 1])
+
+for i in range(10):
+    y = np.random.random()
+    plt.scatter(i, y)
+    plt.pause(0.05)
+
+plt.show()

@@ -344,3 +344,5 @@ if __name__ == "__main__":
                 print(f"====== Episode: {episode + 1}/{nb_episodes}, Reward: {reward}")
                 agent.save(f"models/agent.h5")
                 break
+
+    print("Done", episode + 1, "episodes")

@@ -10,6 +10,12 @@ This AI uses reinforcement learning to learn how to play the game.
 
 The ToManTorinAI will be presented with a board state and a set of possible actions. It will then choose an action and receive a reward based on the outcome of the action.
 
+## V3 - DDPoG
+
+Same as V2 but with a different algorithm.
+
+Algorithm used : [DDPG](https://keras.io/examples/rl/ddpg_pendulum/)
+
 ## V2 - DeepInTheQ
 
 Second version of the AI. One model to move and build, input spreaded as much as possible.
@@ -44,7 +50,28 @@ Movements and build vectors:
 
 ### Results
 
-WIP
+Not better, fails a lot:
+
+```md
+# ====================================== After ~80 episodes
+Player DeepInTheQ won 0 times (0.0%)
+Player Firsty First won 100 times (100.0%)
+We missplyed 1300 times over 2300 turns, (56.52173913043478%)
+
+Player Firsty First won 100 times (100.0%)
+Player DeepInTheQ won 0 times (0.0%)
+We missplyed 200 times over 1000 turns, (20.0%)
+# ===================
+Player DeepInTheQ won 70 times (70.0%)
+Player Randy Random won 30 times (30.0%)
+We missplyed 1237 times over 1940 turns, (63.76288659793814%)
+
+Player Randy Random won 40 times (40.0%)
+Player DeepInTheQ won 60 times (60.0%)
+We missplyed 1229 times over 1988 turns, (61.82092555331992%)
+# ======================================
+```
+
 
 ## V1 - MemoNerd
 

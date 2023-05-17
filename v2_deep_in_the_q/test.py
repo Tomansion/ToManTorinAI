@@ -19,7 +19,7 @@ class DeepInTheQ(Player):
         self.action_size1 = 8
         self.action_size2 = 8
         self.nb_fail = 0
-        self.totalTurn = 0
+        self.total_turn = 0
 
         print("Loading model...")
         self.model = self.build_model()
@@ -97,21 +97,32 @@ class DeepInTheQ(Player):
 
         success, error = board.play_move(move, build)
 
-        self.totalTurn += 1
+        self.total_turn += 1
         if not success:
             self.nb_fail += 1
-            print(
-                "We failed to play the move :(  "
-                + str(self.nb_fail)
-                + " times over "
-                + str(self.totalTurn)
-            )
-            print(error)
+            # print(
+            #     "We failed to play the move :(  "
+            #     + str(self.nb_fail)
+            #     + " times over "
+            #     + str(self.total_turn)
+            # )
+            # print(error)
             # Get a new random action :,(
             possibilites = board.get_possible_movement_and_building_positions(pawn)
             return possibilites[0]
 
         return move, build
+
+    def statistics(self):
+        print(
+            "We missplyed "
+            + str(self.nb_fail)
+            + " times over "
+            + str(self.total_turn)
+            + " turns, ("
+            + str(self.nb_fail / self.total_turn * 100)
+            + "%)"
+        )
 
 
 def board_to_state(board: Board):
@@ -193,22 +204,81 @@ def action_number_to_pos(board: Board, move, build):
 tester = Tester()
 tester.delay_between_moves = 0.0
 tester.display_board = False
-tester.verbose_level = 1
+tester.verbose_level = 0
 
 agent = DeepInTheQ()
 random_player = RandomPlayer()
 first_choice_player = FirstChoicePlayer()
 
-nb_games = 10
-# tester.play_1v1(agent, random_player, nb_games=nb_games)
-# print("nb_no_value: ", agent.nb_no_value)
-# agent.nb_no_value = 0
-# tester.play_1v1(random_player, agent, nb_games=nb_games)
-# print("nb_no_value: ", agent.nb_no_value)
-# agent.nb_no_value = 0
-# tester.play_1v1(agent, first_choice_player, nb_games=nb_games)
-# agent.nb_no_value = 0
-tester.play_1v1(first_choice_player, agent, nb_games=nb_games)
+nb_games = 100
+
+print("======================================")
+agent = DeepInTheQ()
 tester.play_1v1(agent, first_choice_player, nb_games=nb_games)
-tester.play_1v1(random_player, agent, nb_games=nb_games)
+agent.statistics()
+agent = DeepInTheQ()
+tester.play_1v1(first_choice_player, agent, nb_games=nb_games)
+agent.statistics()
+print("===================")
+agent = DeepInTheQ()
 tester.play_1v1(agent, random_player, nb_games=nb_games)
+agent.statistics()
+agent = DeepInTheQ()
+tester.play_1v1(random_player, agent, nb_games=nb_games)
+agent.statistics()
+print("======================================")
+
+# ====================================== After ~50 episodes
+# Results:
+# Player Firsty First won 100 times (100.0%)
+# Player DeepInTheQ won 0 times (0.0%)
+
+# Results:
+# Player DeepInTheQ won 0 times (0.0%)
+# Player Firsty First won 100 times (100.0%)
+
+# Results:
+# Player DeepInTheQ won 69 times (69.0%)
+# Player Randy Random won 31 times (31.0%)
+
+# Results:
+# Player Randy Random won 38 times (38.0%)
+# Player DeepInTheQ won 62 times (62.0%)
+
+# ====================================== After ~55 episodes
+
+# Player DeepInTheQ won 0 times (0.0%)
+# Player Firsty First won 100 times (100.0%)
+# We missplyed 1300 times over 2300 turns, (56.52173913043478%)
+
+# Player Firsty First won 100 times (100.0%)
+# Player DeepInTheQ won 0 times (0.0%)
+# We missplyed 200 times over 1000 turns, (20.0%)
+# ===================
+
+# Player DeepInTheQ won 67 times (67.0%)
+# Player Randy Random won 33 times (33.0%)
+# We missplyed 1147 times over 1825 turns, (62.84931506849315%)
+
+# Player Randy Random won 28 times (28.0%)
+# Player DeepInTheQ won 72 times (72.0%)
+# We missplyed 1189 times over 1882 turns, (63.17747077577046%)
+# ======================================
+
+# ====================================== After ~80 episodes
+# Player DeepInTheQ won 0 times (0.0%)
+# Player Firsty First won 100 times (100.0%)
+# We missplyed 1300 times over 2300 turns, (56.52173913043478%)
+
+# Player Firsty First won 100 times (100.0%)
+# Player DeepInTheQ won 0 times (0.0%)
+# We missplyed 200 times over 1000 turns, (20.0%)
+# ===================
+# Player DeepInTheQ won 70 times (70.0%)
+# Player Randy Random won 30 times (30.0%)
+# We missplyed 1237 times over 1940 turns, (63.76288659793814%)
+
+# Player Randy Random won 40 times (40.0%)
+# Player DeepInTheQ won 60 times (60.0%)
+# We missplyed 1229 times over 1988 turns, (61.82092555331992%)
+# ======================================
