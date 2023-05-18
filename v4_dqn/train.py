@@ -111,9 +111,10 @@ def run(params):
 
         # Game over
         rewards_list.append(reward)
-        average_reward, stdev = get_mean_stdev(rewards_list[-10:])
-        nb_games += 1
-        print("Average reward:", average_reward)
+        if nb_games % 10 == 0 and nb_games != 0:
+            average_reward, stdev = get_mean_stdev(rewards_list[-10:])
+            nb_games += 1
+            print("Average reward:", average_reward)
 
         if params["train"]:
             # train long memory
