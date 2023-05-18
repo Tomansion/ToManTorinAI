@@ -1,20 +1,18 @@
 import tensorflow as tf
 from tensorflow.keras import layers
 import numpy as np
-from env import Env
+from env_test import Env, num_states, num_actions
 from random import random, randint
 import matplotlib.pyplot as plt
 
 # Change the QT backend to avoid crashing on Mac
 import matplotlib
-matplotlib.use('GTK3Agg')
 
+matplotlib.use("GTK3Agg")
 
 env = Env()
 
-num_states = 225
 print("Size of State Space ->  {}".format(num_states))
-num_actions = 8
 print("Size of Action Space ->  {}".format(num_actions))
 
 """
@@ -149,7 +147,6 @@ def get_actor():
         num_actions, activation="tanh", kernel_initializer=last_init
     )(out)
 
-    outputs = outputs
     model = tf.keras.Model(inputs, outputs)
     return model
 
@@ -211,7 +208,7 @@ actor_lr = 0.001
 critic_optimizer = tf.keras.optimizers.Adam(critic_lr)
 actor_optimizer = tf.keras.optimizers.Adam(actor_lr)
 
-total_episodes = 10000
+total_episodes = 30000
 # Discount factor for future rewards
 gamma = 0.99
 # Used to update target networks
@@ -247,7 +244,6 @@ action_taken = {
 for ep in range(total_episodes):
     prev_state = env.reset()
     episodic_reward = 0
-    turn = 0
 
     while True:
         # Uncomment this to see the Actor in action
@@ -272,19 +268,22 @@ for ep in range(total_episodes):
             break
 
         prev_state = state
-        turn += 2
 
     ep_reward_list.append(episodic_reward)
 
     # Mean of last 40 episodes
-    avg_reward = np.mean(ep_reward_list[-40:])
-    avg_turn = np.mean(avg_turn_list[-40:])
-    print("Episode * {} * Avg Reward is ==> {}".format(ep, avg_reward))
-    print("Episode * {} * Avg Turn is ==> {}".format(ep, avg_turn))
-    print("Episode * {} * Avg Action is ==> {}".format(ep, action_taken))
-    print("Epsilon is ==> {}".format(epsilon))
-    epsilon *= epsilon_decay
+    avg_reward = np.mean(ep_reward_list[-200:])
+    avg_turn = np.mean(avg_turn_list[-200:])
+    if ep % 100 == 0:
+        print("Episode * {}, ({}%)".format(ep, int(ep / total_episodes * 100)))
+        print(" * Avg Reward is ==> {}".format(avg_reward))
+        print(" * Avg Turn is ==> {}".format(avg_turn))
+        print(" * Avg Action is ==> {}".format(action_taken))
+        print(" * Epsilon is ==> {}".format(epsilon))
+    if epsilon > 0.1:
+        epsilon *= epsilon_decay
     avg_reward_list.append(avg_reward)
+    turn = env.nb_turns
     avg_turn_list.append(turn)
 
 
@@ -298,9 +297,12 @@ target_actor.save_weights("ddpog_target_actor.h5")
 target_critic.save_weights("ddpog_target_critic.h5")
 
 # Plotting graph
-# Episodes versus Avg. Rewards
+# Episodes versus Avg. Rewards and Avg. Turns
 plt.plot(avg_reward_list)
 plt.xlabel("Episode")
 plt.ylabel("Avg. Epsiodic Reward")
 plt.show()
-    
+plt.plot(avg_turn_list)
+plt.xlabel("Episode")
+plt.ylabel("Avg. Epsiodic Turn")
+plt.show()

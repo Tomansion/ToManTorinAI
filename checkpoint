@@ -1,0 +1,2 @@
+model_checkpoint_path: "model_dqn.hdf"
+all_model_checkpoint_paths: "model_dqn.hdf"
