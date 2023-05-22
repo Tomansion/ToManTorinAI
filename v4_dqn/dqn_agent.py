@@ -43,16 +43,15 @@ class DQNAgent(object):
             model.load_weights(self.weights)
         return model
 
-
     def predict_action(self, state):
-        self.q_values = self.model.predict(np.array(state).reshape(-1, *state.shape),verbose=0)[0]
+        self.q_values = self.model.predict(
+            np.array(state).reshape(-1, *state.shape), verbose=0
+        )[0]
         return self.q_values
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
-        memory_length = len(self.memory)
-        if memory_length % 100 == 0:
-            print(f"Memory length: {memory_length}/{self.memory_size}")
+        print(f"Memory used: {len(self.memory)}/{self.memory_size}")
 
     def replay_new(self, memory, batch_size):
         if len(memory) > batch_size:
@@ -60,12 +59,18 @@ class DQNAgent(object):
         else:
             minibatch = memory
 
-        print("Learning with minibatch of length:", len(minibatch))
+        print(
+            "Learning with minibatch of length:",
+            len(minibatch),
+            "out of",
+            len(memory),
+            "samples",
+        )
         for state, action, reward, next_state, done in minibatch:
             target = reward
             if not done:
                 target = reward + self.gamma * np.amax(
-                    self.model.predict(np.array([next_state]),verbose=0)[0]
+                    self.model.predict(np.array([next_state]), verbose=0)[0]
                 )
             target_f = self.model.predict(np.array([state]), verbose=0)
             target_f[0][np.argmax(action)] = target
@@ -75,8 +80,12 @@ class DQNAgent(object):
         target = reward
         if not done:
             target = reward + self.gamma * np.amax(
-                self.model.predict(next_state.reshape((1, self.input_dim)),verbose=0)[0]
+                self.model.predict(next_state.reshape((1, self.input_dim)), verbose=0)[
+                    0
+                ]
             )
         target_f = self.model.predict(state.reshape((1, self.input_dim)), verbose=0)
         target_f[0][np.argmax(action)] = target
-        self.model.fit(state.reshape((1, self.input_dim)), target_f, epochs=1, verbose=0)
+        self.model.fit(
+            state.reshape((1, self.input_dim)), target_f, epochs=1, verbose=0
+        )

@@ -7,7 +7,7 @@ from random import randint
 from keras.utils import to_categorical
 import random
 import statistics
-from env_test import Env, num_states, num_actions
+from env_test_2 import Env, num_states, num_actions
 from time import sleep
 
 env = Env()
@@ -21,20 +21,25 @@ def define_parameters():
     # Neural Network
     params["input_dim"] = num_states
     params["output_dim"] = num_actions
-    params["epsilon_decay_linear"] = 0.005
+    params["epsilon_decay"] = 0.997
     params["learning_rate"] = 0.0005
     params["first_layer_size"] = 50  # neurons in the first layer
     params["second_layer_size"] = 300  # neurons in the second layer
     params["third_layer_size"] = 50  # neurons in the third layer
-    params["episodes"] = 100
+    params["episodes"] = 1000
     params["memory_size"] = 1000
-    params["batch_size"] = 500
+    params["batch_size"] = 30
     # Settings
-    params["weights_path"] = "weights/weights3.hdf5"
+    params["weights_path"] = "weights/weights4.hdf5"
     params["load_weights"] = False
     params["train"] = True
     params["plot_score"] = True
     return params
+
+
+# Env_test, weights2: 10 :>
+# Env_test_2, weights3: -8.5
+# Env_test_2, weights4: -9.74
 
 
 def get_mean_stdev(array):
@@ -44,6 +49,8 @@ def get_mean_stdev(array):
 def test(params):
     params["load_weights"] = True
     params["train"] = False
+    # Env_test_2, weights3: -8.5
+    params["episodes"] = 100
     print("Testing...")
     score = run(params)
     return score
@@ -59,16 +66,20 @@ def run(params):
 
     nb_games = 0
     rewards_list = []
+    turn_since_last_train = 0
     while nb_games < params["episodes"]:
         # Initialize
-        print(f"== Game {nb_games + 1}/{params['episodes']}")
+        print(f"==== Game {nb_games + 1}/{params['episodes']}")
         env.reset()
         done = False
+        cumulated_reward = 0
+        nb_moves = 0
+        previous_rewards = 0
 
-        # Set episode
+        # Decay epsilon
         if params["train"]:
             # agent.epsilon is set to give randomness to actions
-            agent.epsilon = 1 - (nb_games * params["epsilon_decay_linear"])
+            agent.epsilon *= params["epsilon_decay"]
             print(" - Epsilon:", agent.epsilon)
         else:
             agent.epsilon = 0.00
@@ -76,7 +87,7 @@ def run(params):
         while done is False:
             # get old state
             state_old = np.asarray(env.get_state())
-            print(" - State:", state_old)
+            # print(" - State:", state_old)
 
             # perform random actions based on agent.epsilon, or choose the action
             if random.uniform(0, 1) < agent.epsilon:
@@ -86,7 +97,7 @@ def run(params):
             else:
                 # predict action based on the old state
                 prediction = agent.model.predict(state_old.reshape((1, num_states)))
-                print(" - prediction:", prediction)
+                # print(" - prediction:", prediction)
                 final_move = to_categorical(
                     np.argmax(prediction[0]), num_classes=num_actions
                 )
@@ -97,34 +108,48 @@ def run(params):
             action_index = np.argmax(final_move)
             state_new, reward, done = env.step(action_index)
             state_new = np.asarray(state_new)
-            print(" - Reward", reward)
+            print(" - Reward:", previous_rewards, " -> ", reward)
 
             if params["train"]:
                 # train short memory base on the new action and state
-                print(" - Training short memory")
+                # print(" - Training short memory")
                 agent.train_short_memory(state_old, final_move, reward, state_new, done)
                 # store the new data into a long term memory
-                agent.remember(state_old, final_move, reward, state_new, done)
+                # Only if last and current rewards are different than 0
+                if previous_rewards != 0 or reward != 0:
+                    agent.remember(state_old, final_move, reward, state_new, done)
+                else:
+                    if random.random() < 0.05:
+                        agent.remember(state_old, final_move, reward, state_new, done)
             else:
                 env.display()
                 sleep(0.3)
 
-        # Game over
-        rewards_list.append(reward)
-        if nb_games % 10 == 0 and nb_games != 0:
-            average_reward, stdev = get_mean_stdev(rewards_list[-10:])
-            nb_games += 1
-            print("Average reward:", average_reward)
+            cumulated_reward += reward
+            nb_moves += 1
+            previous_rewards = reward
+            turn_since_last_train += 1
 
-        if params["train"]:
+        # Game over
+        rewards_list.append(cumulated_reward)
+        print(f"== Game {nb_games + 1}/{params['episodes']}")
+        if nb_games != 0:
+            average_reward, stdev = get_mean_stdev(rewards_list[-20:])
+            print("Average reward:", average_reward)
+        nb_games += 1
+
+        # Train long memory
+        if params["train"] and turn_since_last_train > 10:
             # train long memory
             print("training long memory")
             agent.replay_new(agent.memory, params["batch_size"])
 
             # Save weights
             agent.model.save_weights(params["weights_path"], overwrite=True)
+            turn_since_last_train = 0
 
     if params["train"]:
+        # Test the trained model
         average_reward = test(params)
         print("Test average reward:", average_reward)
     else:

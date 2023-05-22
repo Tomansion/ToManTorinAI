@@ -7,4 +7,4 @@ if __name__ == "__main__":
     params["train"] = False
     print("Testing...")
     score = run(params)
-    print(score)
+    print("Final average score:", score)
