@@ -11,7 +11,7 @@ import collections
 class DQNAgent(object):
     def __init__(self, params):
         self.reward = 0
-        self.gamma = 0.9
+        self.gamma = 0.6
         self.dataframe = pd.DataFrame()
         self.short_memory = np.array([])
         self.agent_target = 1

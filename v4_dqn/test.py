@@ -5,6 +5,8 @@ if __name__ == "__main__":
     params = define_parameters()
     params["load_weights"] = True
     params["train"] = False
+    params["episodes"] = 100
+    params["delay_between_moves"] = 0
     print("Testing...")
     score = run(params)
     print("Final average score:", score)

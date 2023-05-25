@@ -62,7 +62,6 @@ class Env:
             self.pawn_pos = self._place_next_to(lvl1_pos)
         self.nb_turns = 0
 
-        self.display()
         return self.get_state()
 
     def get_state(self):
@@ -94,20 +93,20 @@ class Env:
 
         # Check if out of board
         if new_pos[0] < 0 or new_pos[0] > 4 or new_pos[1] < 0 or new_pos[1] > 4:
-            print(" /!\ Out of board at turn", self.nb_turns)
+            # print(" /!\ Out of board at turn", self.nb_turns)
             self.nb_turns += 20
             return self.get_state(), -10, True
 
         # Check if moving too high
         new_height = self.board[new_pos[0]][new_pos[1]]
         if new_height > current_height + 1:
-            print(" !^! Moving too high at turn", self.nb_turns)
+            # print(" !^! Moving too high at turn", self.nb_turns)
             self.nb_turns += 20
             return self.get_state(), -3, True
 
         # Check if reached lvl 3
         if new_height == 3:
-            print(" [+] Reached lvl 3 at turn", self.nb_turns)
+            # print(" [+] Reached lvl 3 at turn", self.nb_turns)
             return self.get_state(), 10, True
 
         if self.nb_turns >= 10:

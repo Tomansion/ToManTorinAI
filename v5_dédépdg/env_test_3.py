@@ -8,15 +8,19 @@ from utils import get_new_pos_from_action
 # goal: Go on the lvl 3 tower
 
 # Inputs:
-# - 5x5 board
+# - 5x5 board x nb towers
 # - Pawn position as a 5x5 board
 
-num_states = 25 * 2
+num_states = 25 * (1 + 4)
 num_actions = 8
 
 
 class Env:
     def __init__(self):
+        self.nb_win = 0
+        self.nb_long = 0
+        self.nb_out = 0
+        self.nb_high = 0
         self.reset()
 
     def _get_random_empty_tile(self):
@@ -69,7 +73,28 @@ class Env:
         state = []
         for i in range(5):
             for j in range(5):
-                state.append(self.board[i][j])
+                if (i, j) == self.board[i][j] == 0:
+                    state.append(1)
+                else:
+                    state.append(0)
+        for i in range(5):
+            for j in range(5):
+                if (i, j) == self.board[i][j] == 1:
+                    state.append(1)
+                else:
+                    state.append(0)
+        for i in range(5):
+            for j in range(5):
+                if (i, j) == self.board[i][j] == 2:
+                    state.append(1)
+                else:
+                    state.append(0)
+        for i in range(5):
+            for j in range(5):
+                if (i, j) == self.board[i][j] == 3:
+                    state.append(1)
+                else:
+                    state.append(0)
 
         for i in range(5):
             for j in range(5):
@@ -78,7 +103,8 @@ class Env:
                 else:
                     state.append(0)
 
-        assert len(state) == num_states
+        if len(state) != num_states:
+            print("Wrong state size:", len(state), "!=", num_states)
         return state
 
     def get_game_score(self):
@@ -94,39 +120,54 @@ class Env:
 
         # Check if out of board
         if new_pos[0] < 0 or new_pos[0] > 4 or new_pos[1] < 0 or new_pos[1] > 4:
-            print(" /!\ Out of board at turn", self.nb_turns)
+            # print(" /!\ Out of board at turn", self.nb_turns)
+            self.nb_out += 1
             self.nb_turns += 20
             return self.get_state(), -10, True
 
         # Check if moving too high
         new_height = self.board[new_pos[0]][new_pos[1]]
         if new_height > current_height + 1:
-            print(" !^! Moving too high at turn", self.nb_turns)
+            # print(" !^! Moving too high at turn", self.nb_turns)
             self.nb_turns += 20
+            self.nb_high += 1
             return self.get_state(), -3, True
 
         # Check if reached lvl 3
         if new_height == 3:
-            print(" [+] Reached lvl 3 at turn", self.nb_turns)
+            # print(" [+] Reached lvl 3 at turn", self.nb_turns)
+            self.nb_win += 1
             return self.get_state(), 10, True
 
         if self.nb_turns >= 10:
-            print(" [!] Too many turns")
+            # print(" [!] Too many turns")
+            self.nb_long += 1
             return self.get_state(), -5, True
 
         return self.get_state(), new_height * 2, False
 
     def display(self):
-        print("Turn", self.nb_turns)
-        for i in range(5):
-            for j in range(5):
-                if (i, j) == self.pawn_pos:
-                    print("X", end=" ")
-                elif self.board[i][j] == 0:
-                    print(".", end=" ")
-                else:
-                    print(self.board[i][j], end=" ")
-            print()
+        # print("Turn", self.nb_turns)
+        # for i in range(5):
+        #     for j in range(5):
+        #         if (i, j) == self.pawn_pos:
+        #             print("X", end=" ")
+        #         elif self.board[i][j] == 0:
+        #             print(".", end=" ")
+        #         else:
+        #             print(self.board[i][j], end=" ")
+        #     print()
+
+        print(
+            "Nb out:",
+            self.nb_out,
+            "Nb long:",
+            self.nb_long,
+            "Nb high:",
+            self.nb_high,
+            "Nb win:",
+            self.nb_win,
+        )
 
 
 if __name__ == "__main__":

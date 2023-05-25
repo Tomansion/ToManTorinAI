@@ -1,22 +1,26 @@
 from random import choice, randint
 from utils import get_new_pos_from_action
 
-# Test env
+# Test env 4
 
 # 5x5 board
 # A lvl1,2 & 3 tower are placed randomly on the board next to each other
 # goal: Go on the lvl 3 tower
 
 # Inputs:
-# - 5x5 board
-# - Pawn position as a 5x5 board
+# Flashlight, vew centered on the pawn
+# 9x9 input, tower value
 
-num_states = 25 * 2
+num_states = 9 * 9
 num_actions = 8
 
 
 class Env:
     def __init__(self):
+        self.nb_win = 0
+        self.nb_long = 0
+        self.nb_out = 0
+        self.nb_high = 0
         self.reset()
 
     def _get_random_empty_tile(self):
@@ -50,10 +54,10 @@ class Env:
         # Place the towers
         lvl1_pos = (randint(0, 4), randint(0, 4))
         self.board[lvl1_pos[0]][lvl1_pos[1]] = 1
-        lvl2_pos = self._place_next_to(lvl1_pos)
-        self.board[lvl2_pos[0]][lvl2_pos[1]] = 2
-        lvl3_pos = self._place_next_to(lvl2_pos)
-        self.board[lvl3_pos[0]][lvl3_pos[1]] = 3
+        # lvl2_pos = self._place_next_to(lvl1_pos)
+        # self.board[lvl2_pos[0]][lvl2_pos[1]] = 2
+        # lvl3_pos = self._place_next_to(lvl2_pos)
+        # self.board[lvl3_pos[0]][lvl3_pos[1]] = 3
 
         # Place the pawn randomly or next to the lvl1 tower
         if randint(0, 1) == 0:
@@ -67,18 +71,22 @@ class Env:
 
     def get_state(self):
         state = []
-        for i in range(5):
-            for j in range(5):
-                state.append(self.board[i][j])
-
-        for i in range(5):
-            for j in range(5):
-                if (i, j) == self.pawn_pos:
-                    state.append(1)
+        for i in range(-4, 5):
+            for j in range(-4, 5):
+                pos = (self.pawn_pos[0] + i, self.pawn_pos[1] + j)
+                if pos[0] < 0 or pos[0] > 4 or pos[1] < 0 or pos[1] > 4:
+                    # Out of board
+                    state.append(-1)
+                elif pos == self.pawn_pos:
+                    state.append(4)
                 else:
-                    state.append(0)
+                    state.append(self.board[pos[0]][pos[1]])
 
-        assert len(state) == num_states
+            #     print(state[-1], end=" ")
+            # print()
+
+        if len(state) != num_states:
+            print("Wrong state size:", len(state), "!=", num_states)
         return state
 
     def get_game_score(self):
@@ -95,6 +103,7 @@ class Env:
         # Check if out of board
         if new_pos[0] < 0 or new_pos[0] > 4 or new_pos[1] < 0 or new_pos[1] > 4:
             print(" /!\ Out of board at turn", self.nb_turns)
+            self.nb_out += 1
             self.nb_turns += 20
             return self.get_state(), -10, True
 
@@ -103,15 +112,18 @@ class Env:
         if new_height > current_height + 1:
             print(" !^! Moving too high at turn", self.nb_turns)
             self.nb_turns += 20
+            self.nb_high += 1
             return self.get_state(), -3, True
 
         # Check if reached lvl 3
-        if new_height == 3:
+        if new_height == 1:
             print(" [+] Reached lvl 3 at turn", self.nb_turns)
+            self.nb_win += 1
             return self.get_state(), 10, True
 
         if self.nb_turns >= 10:
             print(" [!] Too many turns")
+            self.nb_long += 1
             return self.get_state(), -5, True
 
         return self.get_state(), new_height * 2, False
@@ -127,6 +139,17 @@ class Env:
                 else:
                     print(self.board[i][j], end=" ")
             print()
+
+        print(
+            "Nb out:",
+            self.nb_out,
+            "Nb long:",
+            self.nb_long,
+            "Nb high:",
+            self.nb_high,
+            "Nb win:",
+            self.nb_win,
+        )
 
 
 if __name__ == "__main__":

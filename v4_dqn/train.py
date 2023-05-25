@@ -7,7 +7,7 @@ from random import randint
 from keras.utils import to_categorical
 import random
 import statistics
-from env_test_2 import Env, num_states, num_actions
+from env_test_3 import Env, num_states, num_actions
 from time import sleep
 
 env = Env()
@@ -21,25 +21,26 @@ def define_parameters():
     # Neural Network
     params["input_dim"] = num_states
     params["output_dim"] = num_actions
-    params["epsilon_decay"] = 0.997
+    params["epsilon_decay"] = 0.999
     params["learning_rate"] = 0.0005
-    params["first_layer_size"] = 50  # neurons in the first layer
+    params["first_layer_size"] = 100  # neurons in the first layer
     params["second_layer_size"] = 300  # neurons in the second layer
     params["third_layer_size"] = 50  # neurons in the third layer
-    params["episodes"] = 1000
-    params["memory_size"] = 1000
+    params["episodes"] = 2000
+    params["memory_size"] = 300
     params["batch_size"] = 30
     # Settings
-    params["weights_path"] = "weights/weights4.hdf5"
+    params["weights_path"] = "weights/weights7.hdf5"
     params["load_weights"] = False
     params["train"] = True
     params["plot_score"] = True
+    params["delay_between_moves"] = 0
     return params
 
 
 # Env_test, weights2: 10 :>
 # Env_test_2, weights3: -8.5
-# Env_test_2, weights4: -9.74
+# Env_test_2, weights4: -9.74, -5.8, -4.9, -3.85
 
 
 def get_mean_stdev(array):
@@ -123,7 +124,7 @@ def run(params):
                         agent.remember(state_old, final_move, reward, state_new, done)
             else:
                 env.display()
-                sleep(0.3)
+                sleep(params["delay_between_moves"])
 
             cumulated_reward += reward
             nb_moves += 1
@@ -131,6 +132,7 @@ def run(params):
             turn_since_last_train += 1
 
         # Game over
+        env.display()
         rewards_list.append(cumulated_reward)
         print(f"== Game {nb_games + 1}/{params['episodes']}")
         if nb_games != 0:
