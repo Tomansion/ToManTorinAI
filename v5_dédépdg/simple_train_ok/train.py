@@ -200,8 +200,8 @@ def policy(state, epsilon=0):
     return [np.squeeze(legal_action)]
 
 
-epsilon_min = 0.2
-epsilon_decay = 0.999
+epsilon_min = 0.1
+epsilon_decay = 0.99
 
 actor_model = get_actor()
 critic_model = get_critic()
@@ -220,7 +220,7 @@ actor_lr = 0.001
 critic_optimizer = tf.keras.optimizers.Adam(critic_lr)
 actor_optimizer = tf.keras.optimizers.Adam(actor_lr)
 
-total_episodes = 4000
+total_episodes = 500
 # Discount factor for future rewards
 gamma = 0.99
 # Used to update target networks
@@ -231,7 +231,7 @@ buffer = Buffer(50000, 64)
 # To store average reward history of last few episodes
 avg_reward_list = []
 nb_turn_list = []
-avg_nb_turn_list = []
+
 
 def train():
     print("Training")
@@ -269,20 +269,20 @@ def train():
 
             prev_state = state
 
-
-        ep_reward_list.append(sum(episodic_reward) / nb_turn)
         # env.display()
+        ep_reward_list.append(sum(episodic_reward) / nb_turn)
 
         # Decay epsilon after each episode
         epsilon *= epsilon_decay
         epsilon = max(epsilon_min, epsilon)
 
         # Mean of last 40 episodes
-        avg_reward = np.mean(ep_reward_list[-100:])
+        avg_reward = np.mean(ep_reward_list[-40:])
         avg_reward_list.append(avg_reward)
         nb_turn_list.append(nb_turn)
-        avg_nb_turn = np.mean(nb_turn_list[-100:])
-        avg_nb_turn_list.append(avg_nb_turn)
+
+        env.display()
+        avg_nb_turn = np.mean(nb_turn_list[-40:])
         print("Episode * {}/{}".format(ep, total_episodes))
         print("  Avg Reward * {}".format(avg_reward))
         print("  Avg Nb Turn * {}".format(avg_nb_turn))
@@ -300,9 +300,6 @@ def train():
     plt.plot(avg_reward_list)
     plt.xlabel("Episode")
     plt.ylabel("Avg. Epsiodic Reward")
-    plt.show()
-    
-    plt.plot(avg_nb_turn_list)
     plt.show()
 
 

@@ -21,11 +21,12 @@ target_critic.load_weights("pendulum_target_critic.h5")
 
 total_episodes = 1000
 
-episodic_reward = []
 for ep in range(total_episodes):
     prev_state = env.reset()
+    episodic_reward = []
 
     while True:
+        env.display()
         tf_prev_state = tf.expand_dims(tf.convert_to_tensor(prev_state), 0)
 
         sampled_actions = actor_model(tf_prev_state)
@@ -35,8 +36,7 @@ for ep in range(total_episodes):
         # Recieve state and reward from environment.
         state, reward, done = env.step(num_action)
 
-        # sleep(0.1)
-        # env.display()
+        sleep(0.1)
         
 
         episodic_reward.append(reward)
@@ -50,7 +50,3 @@ for ep in range(total_episodes):
     avg_reward = np.mean(episodic_reward)
     print("Total reward average: ", avg_reward)
 
-# With 3000 episodes: 0.14
-# With 4000 episodes: 0.17
-# With 4000 and 8 actions: 0.20
-# With 4000 and 8 actions + can't go warning: 0.31

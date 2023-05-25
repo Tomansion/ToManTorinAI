@@ -53,4 +53,3 @@ for ep in range(total_episodes):
 # With 3000 episodes: 0.14
 # With 4000 episodes: 0.17
 # With 4000 and 8 actions: 0.20
-# With 4000 and 8 actions + can't go warning: 0.31
