@@ -35,8 +35,9 @@ for ep in range(total_episodes):
         # Recieve state and reward from environment.
         state, reward, done = env.step(num_action)
 
-        # sleep(0.1)
-        # env.display()
+        sleep(0.1)
+        env.stats()
+        env.display()
         
 
         episodic_reward.append(reward)

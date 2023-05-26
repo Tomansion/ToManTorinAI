@@ -3,6 +3,7 @@ from tensorflow import keras
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
+import random
 
 # from env_test import Env, num_states, num_actions
 from env_test import Env
@@ -125,6 +126,8 @@ class Buffer:
 
     # We compute the loss and update parameters
     def learn(self):
+        if self.buffer_counter < self.batch_size:
+            return
         # Get sampling range
         record_range = min(self.buffer_counter, self.buffer_capacity)
         # Randomly sample indices
@@ -190,7 +193,7 @@ def get_critic():
 
 def policy(state, epsilon=0):
     if epsilon > 0 and np.random.random() < epsilon:
-        return np.random.uniform(low=0, high=1, size=4)
+        return np.random.uniform(low=0, high=1, size=num_actions)
 
     sampled_actions = tf.squeeze(actor_model(state))
 
@@ -200,8 +203,8 @@ def policy(state, epsilon=0):
     return [np.squeeze(legal_action)]
 
 
-epsilon_min = 0.2
-epsilon_decay = 0.999
+epsilon_min = 0.25
+epsilon_decay = 0.99
 
 actor_model = get_actor()
 critic_model = get_critic()
@@ -220,18 +223,19 @@ actor_lr = 0.001
 critic_optimizer = tf.keras.optimizers.Adam(critic_lr)
 actor_optimizer = tf.keras.optimizers.Adam(actor_lr)
 
-total_episodes = 4000
+total_episodes = 2000
 # Discount factor for future rewards
 gamma = 0.99
 # Used to update target networks
 tau = 0.005
 
-buffer = Buffer(50000, 64)
+buffer = Buffer(100000, 128)
 
 # To store average reward history of last few episodes
 avg_reward_list = []
 nb_turn_list = []
 avg_nb_turn_list = []
+
 
 def train():
     print("Training")
@@ -256,7 +260,11 @@ def train():
             # Recieve state and reward from environment.
             state, reward, done = env.step(num_action)
 
-            buffer.record((prev_state, action, reward, state))
+            if reward == 0:
+                if random.random() < 0.1:
+                    buffer.record((prev_state, action, reward, state))
+            else:
+                buffer.record((prev_state, action, reward, state))
             episodic_reward.append(reward)
 
             buffer.learn()
@@ -269,21 +277,18 @@ def train():
 
             prev_state = state
 
-
-        ep_reward_list.append(sum(episodic_reward) / nb_turn)
-        # env.display()
-
         # Decay epsilon after each episode
         epsilon *= epsilon_decay
         epsilon = max(epsilon_min, epsilon)
 
         # Mean of last 40 episodes
-        avg_reward = np.mean(ep_reward_list[-100:])
+        avg_reward = np.mean(episodic_reward[-1000:])
         avg_reward_list.append(avg_reward)
         nb_turn_list.append(nb_turn)
         avg_nb_turn = np.mean(nb_turn_list[-100:])
         avg_nb_turn_list.append(avg_nb_turn)
         print("Episode * {}/{}".format(ep, total_episodes))
+        env.stats()
         print("  Avg Reward * {}".format(avg_reward))
         print("  Avg Nb Turn * {}".format(avg_nb_turn))
         print("  Epsilon: ", epsilon)
@@ -301,7 +306,7 @@ def train():
     plt.xlabel("Episode")
     plt.ylabel("Avg. Epsiodic Reward")
     plt.show()
-    
+
     plt.plot(avg_nb_turn_list)
     plt.show()
 
