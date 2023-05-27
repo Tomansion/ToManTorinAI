@@ -12,27 +12,17 @@ from helper import (
 
 BOARD_SIZE = 5
 
-# Env1 : reach T2, flashlight
+# Env2.2: reach T2, flashlight, with possible actions in
 
-# Stage : centered on the pawn
-
-# Average score over 1000 episodes: 1.223
-# nb win: 1
+# Stage : centered on the pawn, add to state if an action is possible
+# Average score over 10000 episodes: 9.3558
+# nb win: 8743
 # nb out: 0
-# nb long: 112
-# nb nb_high: 887
-# Training slowly, sees to be confusing
-# the two towers
-# After training 8000 episodes, sudden improvement
-# After training 10000 episodes : 6 win in average
-# Average score over 10000 episodes: 4.9221
-# nb win: 2033
-# nb out: 0
-# nb long: 2894
-# nb nb_high: 5073
+# nb long: 1131
+# nb nb_high: 126
 
-NB_STATES = (BOARD_SIZE * 2 - 1) ** 2
 NB_ACTIONS = 8
+NB_STATES = (BOARD_SIZE * 2 - 1) ** 2 + NB_ACTIONS
 
 
 class Env:
@@ -138,6 +128,16 @@ class Env:
                     print(state[j * 9 + i], end=" ")
                 print()
             print()
+
+        # Add if actions are possible
+        for i in range(NB_ACTIONS):
+            new_pos = new_pos_from_action(self.pawn_pos, i)
+            if is_outside(self.board, new_pos):
+                state.append(0)
+            elif not is_tile_accessible(self.board, self.pawn_pos, new_pos):
+                state.append(0)
+            else:
+                state.append(1)
 
         if len(state) != NB_STATES:
             raise Exception("state size is not correct")

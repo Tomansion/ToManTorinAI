@@ -12,13 +12,17 @@ from helper import (
 
 BOARD_SIZE = 5
 
-# Env1 : reach T2, bigger flashlight
+# Env2.2: reach T2, flashlight, with possible actions in
 
-# Stage : centered on the pawn, one state per tower
+# Stage : centered on the pawn, add to state if an action is possible
+# Average score over 10000 episodes: 9.3558
+# nb win: 8743
+# nb out: 0
+# nb long: 1131
+# nb nb_high: 126
 
-
-NB_STATES = ((BOARD_SIZE * 2 - 1) ** 2) * 2
 NB_ACTIONS = 8
+NB_STATES = (BOARD_SIZE * 2 - 1) ** 2 + NB_ACTIONS
 
 
 class Env:
@@ -36,7 +40,7 @@ class Env:
         return NB_ACTIONS
 
     def reset(self):
-        self.pawn_pos = [-1, -1]
+        self.pawn_pos = None
         self._place_goal()
 
         r = randint(0, 2)
@@ -65,18 +69,11 @@ class Env:
 
     def step(self, action):
         action = np.argmax(action)
-        game_over = False
-        reward = 0
-        
         new_pos = new_pos_from_action(self.pawn_pos, action)
 
-        self.turn += 1
-
-        if self.turn == 100:
-            game_over = True
-            self.nb_long += 1
-
         # check if out of bounds
+        reward = 0
+        game_over = False
         if is_outside(self.board, new_pos):
             game_over = True
             reward = -10
@@ -86,7 +83,7 @@ class Env:
         # Check if tile is accessible
         if not is_tile_accessible(self.board, self.pawn_pos, new_pos):
             game_over = True
-            reward = -10
+            reward = -5
             self.nb_high += 1
             return reward, game_over, self.score
 
@@ -96,52 +93,51 @@ class Env:
         if self.pawn_pos == self.t2_pos:
             self.score += 1
             reward = 10
-            self.nb_win += 1
             self._place_goal()
 
         if self.score == 10:
             game_over = True
             self.nb_win += 1
 
+        if self.turn == 100:
+            game_over = True
+            self.nb_long += 1
+
+        self.turn += 1
 
         return reward, game_over, self.score
 
     def get_state(self, print_state=False):
         # Display a the board with the pawn in the middle
         state = []
-        # T1
-        for j in range(-4, 5):
-            for i in range(-4, 5):
-                pos_rel = [self.pawn_pos[0] + i, self.pawn_pos[1] + j]
-                if is_outside(self.board, pos_rel):
-                    state.append(-1)
-                elif pos_rel == self.t1_pos:
-                    state.append(1)
-                else:
-                    state.append(0)
-        # T2
         for j in range(-4, 5):
             for i in range(-4, 5):
                 pos_rel = [self.pawn_pos[0] + i, self.pawn_pos[1] + j]
                 if is_outside(self.board, pos_rel):
                     state.append(-1)
                 elif pos_rel == self.t2_pos:
+                    state.append(2)
+                elif pos_rel == self.t1_pos:
                     state.append(1)
                 else:
                     state.append(0)
 
         if print_state:
-            for j in range(8, -1, -1):
+            for j in range(8 - 1, -1, -1):
                 for i in range(9):
-                    if state[j * 9 + i] == 1:
-                        print("1", end=" ")
-                    elif state[j * 9 + i + 81] == 1:
-                        print("2", end=" ")
-                    elif state[j * 9 + i] == -1:
-                        print("X", end=" ")
-                    else:
-                        print("_", end=" ")
+                    print(state[j * 9 + i], end=" ")
                 print()
+            print()
+
+        # Add if actions are possible
+        for i in range(NB_ACTIONS):
+            new_pos = new_pos_from_action(self.pawn_pos, i)
+            if is_outside(self.board, new_pos):
+                state.append(0)
+            elif not is_tile_accessible(self.board, self.pawn_pos, new_pos):
+                state.append(0)
+            else:
+                state.append(1)
 
         if len(state) != NB_STATES:
             raise Exception("state size is not correct")
