@@ -24,6 +24,7 @@ def plot_test(mean_scores):
     plt.xlabel("Number of games")
     plt.ylabel("Scores")
     plt.plot(mean_scores)
+    plt.savefig("training.png")
     plt.pause(0.001)
 
 

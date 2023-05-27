@@ -3,12 +3,13 @@ from helper import plot, plot_test
 from agent import Agent
 from test import test
 
+
 def train():
     plot_scores = []
     plot_mean_scores = []
     plot_mean_test_scores = []
     total_score = 0
-    episodes = 10000
+    episodes = 15000
     current_episode = 0
     env = Env()
     agent = Agent(env.get_state_size(), env.get_action_size())
@@ -38,7 +39,6 @@ def train():
             agent.n_games += 1
             agent.train_long_memory()
 
-
             plot_scores.append(score)
             total_score += score
             mean_score = total_score / agent.n_games
@@ -67,9 +67,10 @@ def train():
                 agent.save()
 
             if current_episode % 50 == 0:
-                average_test_score = test(episodes=300)
+                average_test_score = test(episodes=150)
                 plot_mean_test_scores.append(average_test_score)
                 plot_test(plot_mean_test_scores)
+
 
 if __name__ == "__main__":
     train()

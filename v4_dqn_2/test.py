@@ -36,5 +36,5 @@ def test(delay=0.0, display=False, episodes=100, verbose=False):
 
 
 if __name__ == "__main__":
-    test(delay=0.2, display=True, episodes=10)
+    test(delay=0.4, display=True, episodes=1)
     # test(episodes=10000)

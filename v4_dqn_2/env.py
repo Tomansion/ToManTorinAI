@@ -12,14 +12,9 @@ from helper import (
 
 BOARD_SIZE = 5
 
-# Env2.2: reach T2, flashlight, with possible actions in
+# Env4: reach T3.1, flashlight, with possible actions in
 
 # Stage : centered on the pawn, add to state if an action is possible
-# Average score over 10000 episodes: 9.3558
-# nb win: 8743
-# nb out: 0
-# nb long: 1131
-# nb nb_high: 126
 
 NB_ACTIONS = 8
 NB_STATES = (BOARD_SIZE * 2 - 1) ** 2 + NB_ACTIONS
@@ -27,11 +22,12 @@ NB_STATES = (BOARD_SIZE * 2 - 1) ** 2 + NB_ACTIONS
 
 class Env:
     def __init__(self):
-        self.reset()
+        self.board = create_empty_board(BOARD_SIZE)
         self.nb_win = 0
         self.nb_out = 0
         self.nb_long = 0
         self.nb_high = 0
+        self.reset()
 
     def get_state_size(self):
         return NB_STATES
@@ -43,11 +39,17 @@ class Env:
         self.pawn_pos = None
         self._place_goal()
 
-        r = randint(0, 2)
+        r = randint(0, 5)
         if r == 0:
-            self.pawn_pos = self.t1_pos
+            self.pawn_pos = self.t1_pos.copy()
         elif r == 1:
+            self.pawn_pos = self.t2_pos.copy()
+        elif r == 2:
             self.pawn_pos = place_next_to(self.board, self.t1_pos)
+        elif r == 3:
+            self.pawn_pos = place_next_to(self.board, self.t2_pos)
+        elif r == 4:
+            self.pawn_pos =  place_next_to(self.board, self.t3_pos)
         else:
             self.pawn_pos = get_random_empty_tile(self.board)
 
@@ -56,13 +58,15 @@ class Env:
 
     def _place_goal(self):
         # Reset board
-        self.board = create_empty_board(BOARD_SIZE)
+        self.board.fill(0)
 
-        self.t2_pos = get_random_empty_tile(self.board)
+        self.t3_pos = get_random_empty_tile(self.board)
         if self.pawn_pos is not None:
-            while self.t2_pos == self.pawn_pos:
-                self.t2_pos = get_random_empty_tile(self.board)
+            while self.t3_pos == self.pawn_pos:
+                self.t3_pos = get_random_empty_tile(self.board)
 
+        self.board[self.t3_pos[0]][self.t3_pos[1]] = 3
+        self.t2_pos = place_next_to(self.board, self.t3_pos)
         self.board[self.t2_pos[0]][self.t2_pos[1]] = 2
         self.t1_pos = place_next_to(self.board, self.t2_pos)
         self.board[self.t1_pos[0]][self.t1_pos[1]] = 1
@@ -90,7 +94,7 @@ class Env:
         self.pawn_pos = new_pos
 
         # check goal
-        if self.pawn_pos == self.t2_pos:
+        if self.pawn_pos == self.t3_pos:
             self.score += 1
             reward = 10
             self._place_goal()
@@ -113,14 +117,12 @@ class Env:
         for j in range(-4, 5):
             for i in range(-4, 5):
                 pos_rel = [self.pawn_pos[0] + i, self.pawn_pos[1] + j]
+
                 if is_outside(self.board, pos_rel):
                     state.append(-1)
-                elif pos_rel == self.t2_pos:
-                    state.append(2)
-                elif pos_rel == self.t1_pos:
-                    state.append(1)
                 else:
-                    state.append(0)
+                    board_value = self.board[pos_rel[0]][pos_rel[1]]
+                    state.append(board_value)
 
         if print_state:
             for j in range(8 - 1, -1, -1):
@@ -139,6 +141,9 @@ class Env:
             else:
                 state.append(1)
 
+            if print_state:
+                print(str(i) + ":", state[-1])
+
         if len(state) != NB_STATES:
             raise Exception("state size is not correct")
         return state
@@ -148,6 +153,8 @@ class Env:
             for i in range(BOARD_SIZE):
                 if self.pawn_pos == [i, j]:
                     print("P", end=" ")
+                elif self.t3_pos == [i, j]:
+                    print("3", end=" ")
                 elif self.t2_pos == [i, j]:
                     print("2", end=" ")
                 elif self.t1_pos == [i, j]:
@@ -173,7 +180,9 @@ if __name__ == "__main__":
     print("============")
     while True:
         action = int(input("action: "))
-        reward, done, score = env.step(action)
+        actions = np.zeros(NB_ACTIONS)
+        actions[action] = 1
+        reward, done, score = env.step(actions)
         env.get_state(print_state=True)
         env.render()
         print("reward:", reward)
