@@ -1,11 +1,12 @@
 from env import Env
-from helper import plot
+from helper import plot, plot_test
 from agent import Agent
-
+from test import test
 
 def train():
     plot_scores = []
     plot_mean_scores = []
+    plot_mean_test_scores = []
     total_score = 0
     episodes = 10000
     current_episode = 0
@@ -37,8 +38,6 @@ def train():
             agent.n_games += 1
             agent.train_long_memory()
 
-            if current_episode % 100 == 0:
-                agent.save()
 
             plot_scores.append(score)
             total_score += score
@@ -56,6 +55,7 @@ def train():
                 "Epsilon:",
                 agent.epsilon,
             )
+            # env.stats()
 
             agent.decrease_epsilon()
 
@@ -63,6 +63,13 @@ def train():
             if current_episode >= episodes:
                 break
 
+            if current_episode % 10 == 0:
+                agent.save()
+
+            if current_episode % 50 == 0:
+                average_test_score = test(episodes=300)
+                plot_mean_test_scores.append(average_test_score)
+                plot_test(plot_mean_test_scores)
 
 if __name__ == "__main__":
     train()

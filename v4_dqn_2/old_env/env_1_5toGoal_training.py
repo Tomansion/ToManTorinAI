@@ -3,7 +3,7 @@ import numpy as np
 
 BOARD_SIZE = 5
 
-# Env1 : flashlight simple goal chase
+# Env1 : Simple goal chase
 
 # NB_STATES = (BOARD_SIZE * 2 - 1) ** 2
 NB_STATES = ((BOARD_SIZE) ** 2) * 2

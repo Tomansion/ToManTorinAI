@@ -6,8 +6,8 @@ from model import Linear_QNet, QTrainer
 MAX_MEMORY = 100000
 BATCH_SIZE = 1000
 EPS_START = 1
-EPS_END = 0.03
-EPS_DECAY = 0.99
+EPS_END = 0.1
+EPS_DECAY = 0.996
 LR = 0.001
 
 
@@ -19,6 +19,7 @@ class Agent:
         self.epsilon = EPS_START
         self.gamma = 0.9  # discount rate
         self.memory = deque(maxlen=MAX_MEMORY)  # popleft()
+        
         self.model = Linear_QNet(nb_states, 256, nb_actions)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
