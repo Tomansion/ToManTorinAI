@@ -7,19 +7,20 @@ MAX_MEMORY = 100000
 BATCH_SIZE = 1000
 EPS_START = 1
 EPS_END = 0.1
-EPS_DECAY = 0.999
+EPS_DECAY = 0.9993
 LR = 0.001
 
 
 class Agent:
-    def __init__(self, nb_states, nb_actions):
+    def __init__(self, nb_states, nb_actions, name="agent"):
         self.nb_states = nb_states
         self.nb_actions = nb_actions
+        self.name = name
         self.n_games = 0
         self.epsilon = EPS_START
         self.gamma = 0.9  # discount rate
         self.memory = deque(maxlen=MAX_MEMORY)  # popleft()
-        
+
         self.model = Linear_QNet(nb_states, 256, nb_actions)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
@@ -27,6 +28,14 @@ class Agent:
         self.memory.append(
             (state, action, reward, next_state, done)
         )  # popleft if MAX_MEMORY is reached
+
+    def change_last_memory_reward(self, reward):
+        # change the last memory reward
+        state, action, previous_reward, next_state, done = self.memory.pop()
+        if previous_reward >= 0:
+            self.memory.append((state, action, reward, next_state, done))
+        else:
+            self.memory.append((state, action, previous_reward, next_state, done))
 
     def train_long_memory(self):
         if len(self.memory) > BATCH_SIZE:
@@ -60,8 +69,11 @@ class Agent:
         if self.epsilon > EPS_END:
             self.epsilon *= EPS_DECAY
 
-    def save(self):
-        torch.save(self.model.state_dict(), "models/model.pth")
+    def save(self, name=None):
+        if name is None:
+            torch.save(self.model.state_dict(), "models/" + self.name + ".pth")
+        else:
+            torch.save(self.model.state_dict(), "models/" + name + ".pth")
 
     def load(self):
-        self.model.load_state_dict(torch.load("models/model.pth"))
+        self.model.load_state_dict(torch.load("models/" + self.name + ".pth"))
