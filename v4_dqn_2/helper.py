@@ -25,6 +25,8 @@ def plot_test(mean_scores_test, mean_scores_train):
     plt.ylabel("Scores")
     plt.plot(mean_scores_test)
     plt.plot(mean_scores_train)
+    # Save the figure
+    plt.savefig("test_training_results.png")
     plt.pause(0.001)
 
 
@@ -93,20 +95,11 @@ def is_outside(BOARD_SIZE, coord):
     )
 
 
-def is_tile_accessible(board, current_pos, next_pos):
+def is_tile_accessible(BOARD_SIZE, board, current_pos, next_pos):
+    if is_outside(BOARD_SIZE, next_pos):
+        return False
+
     current_level = board[current_pos[0]][current_pos[1]]
 
-    # Check if the tile is in the board
-    if (
-        next_pos[0] < 0
-        or next_pos[0] >= len(board[0])
-        or next_pos[1] < 0
-        or next_pos[1] >= len(board[0])
-    ):
-        return False
-
     # Check if we are not trying to access a higher level
-    if board[next_pos[0]][next_pos[1]] > current_level + 1:
-        return False
-
-    return True
+    return board[next_pos[0]][next_pos[1]] <= current_level + 1

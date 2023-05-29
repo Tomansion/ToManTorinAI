@@ -43,6 +43,9 @@ class Agent:
         else:
             mini_sample = self.memory
 
+        if len(mini_sample) == 0:
+            return
+
         states, actions, rewards, next_states, dones = zip(*mini_sample)
         self.trainer.train_step(states, actions, rewards, next_states, dones)
         # for state, action, reward, nexrt_state, done in mini_sample:

@@ -232,7 +232,7 @@ if __name__ == "__main__":
     # profiler.enable()
 
     # === Small model tests
-    test(delay=0.6, display=True, episodes=2, test=True)
+    test(delay=0.6, display=True, episodes=1, test=True)
     # test(delay=0.6, display=True, episodes=2, test=False)
     # test(delay=0.6, display=True, episodes=2, test=True, best=True)
     # test(delay=0.6, display=True, episodes=2, test=False, best=True)

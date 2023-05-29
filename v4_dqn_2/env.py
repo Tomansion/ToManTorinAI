@@ -14,19 +14,22 @@ from helper import (
 BOARD_SIZE = 5
 
 
-# TODO: change the pos on fail
 # TODO: decrease flashlight size
+# TODO: add level to state
 # TODO: Only have 0 and one in the flashlight
+# TODO: negative reward on step and start from empty board
 
 # Env4:2: Move and build solo, flashlight * 5 for each tower state
-# Multiple flashlight : Not training
-# Multiple flashlight with bigger model : Not training
+# Multiple flashlight: Not training
+# Multiple flashlight with bigger model: Not training
+# Multiple flashlight and changing the pos on fail: Not training
 
 
 NB_ACTIONS = 8
 
-FLASHLIGHT_SIZE = BOARD_SIZE * 2 - 1
-FLASHLIGHT_AREA = FLASHLIGHT_SIZE**2
+FLASHLIGHT_SIZE = BOARD_SIZE - 1
+FLASHLIGHT_BORDER_SIZE = FLASHLIGHT_SIZE * 2 - 1
+FLASHLIGHT_AREA = FLASHLIGHT_BORDER_SIZE**2
 
 NB_STATES = FLASHLIGHT_AREA * 5 + NB_ACTIONS
 print("NB_STATES:", NB_STATES)
@@ -93,7 +96,7 @@ class Env:
             return reward, game_over
 
         # Check if tile is accessible
-        if not is_tile_accessible(self.board, self.pawn_pos, new_pos):
+        if not is_tile_accessible(BOARD_SIZE, self.board, self.pawn_pos, new_pos):
             game_over = True
             reward = -5
             self.nb_high += 1
@@ -153,9 +156,10 @@ class Env:
         state = [0] * NB_STATES
         state_id = 0
         for tower_lever in range(5):
-            for j in range(-4, 5):
-                for i in range(-4, 5):
+            for j in range(-(FLASHLIGHT_SIZE - 1), FLASHLIGHT_SIZE):
+                for i in range(-(FLASHLIGHT_SIZE - 1), FLASHLIGHT_SIZE):
                     pos_rel = [self.pawn_pos[0] + i, self.pawn_pos[1] + j]
+                    # print(i, j, pos_rel, state_id)
 
                     if is_outside(BOARD_SIZE, pos_rel):
                         state[state_id] = -1
@@ -168,9 +172,17 @@ class Env:
 
         if print_state:
             for tower_lever in range(5):
-                for j in range(8 - 1, -1, -1):
-                    for i in range(9):
-                        print(state[j * 9 + i + tower_lever * FLASHLIGHT_AREA], end=" ")
+                for j in range(FLASHLIGHT_BORDER_SIZE - 1, -1, -1):
+                    for i in range(FLASHLIGHT_BORDER_SIZE):
+                        element = state[
+                            j * FLASHLIGHT_BORDER_SIZE
+                            + i
+                            + tower_lever * FLASHLIGHT_AREA
+                        ]
+                        print(
+                            element if element != -1 else "_",
+                            end=" ",
+                        )
                     print()
                 print()
 
@@ -182,7 +194,7 @@ class Env:
         # Add if actions are possible
         for i in range(NB_ACTIONS):
             new_pos = new_pos_from_action(self.pawn_pos, i)
-            if is_tile_accessible(self.board, self.pawn_pos, new_pos):
+            if is_tile_accessible(BOARD_SIZE, self.board, self.pawn_pos, new_pos):
                 state[-NB_ACTIONS + i] = 1
 
             if print_state and state[-1] == 1:
@@ -276,8 +288,8 @@ if __name__ == "__main__":
 
         # Get action from the last 8 state values (the possible actions)
         state = env.get_move_state()
-        # actions = get_random_action_from_state(state)
-        actions = get_user_action_from_state("Move", state)
+        actions = get_random_action_from_state(state)
+        # actions = get_user_action_from_state("Move", state)
 
         reward, done = env.move(actions)
         env.get_move_state(print_state=True)
@@ -300,8 +312,8 @@ if __name__ == "__main__":
 
         # Get action from the last 8 state values (the possible actions)
         state = env.get_build_state()
-        # actions = get_random_action_from_state(state)
-        actions = get_user_action_from_state("Build", state)
+        actions = get_random_action_from_state(state)
+        # actions = get_user_action_from_state("Build", state)
         reward, done = env.build(actions)
         env.get_build_state(print_state=True)
 
