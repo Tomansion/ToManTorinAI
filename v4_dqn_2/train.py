@@ -8,68 +8,115 @@ def train():
     plot_scores = []
     plot_mean_scores = []
     plot_mean_test_scores = []
-    total_score = 0
     episodes = 15000
     current_episode = 0
-    env = Env()
-    agent = Agent(env.get_state_size(), env.get_action_size())
+    best_score_avg = 0
+    env = Env(test=False)
+
+    move_agent = Agent(env.get_state_size(), env.get_action_size(), "move_agent")
+    build_agent = Agent(env.get_state_size(), env.get_action_size(), "build_agent")
+    move_agent.save()
+    build_agent.save()
+
     print("NB_STATES:", env.get_state_size())
     print("NB_ACTIONS:", env.get_action_size())
 
+    last_build_state = None
+    last_build_choice = None
+
     while True:
+        move_done, build_done = False, False
         # get old state
-        state_old = env.get_state()
+        move_state_old = env.get_move_state()
 
-        # get move
-        final_move = agent.get_action(state_old, train=True)
+        # === Move
+        # perform move
+        move_choice = move_agent.get_action(move_state_old, train=True)
+        move_reward, move_done = env.move(move_choice)
+        # train short memory and remember
+        move_state_new = env.get_move_state()
+        move_agent.train_short_memory(
+            move_state_old, move_choice, move_reward, move_state_new, move_done
+        )
+        move_agent.remember(
+            move_state_old, move_choice, move_reward, move_state_new, move_done
+        )
 
-        # perform move and get new state
-        reward, done, score = env.step(final_move)
-        state_new = env.get_state()
+        if not move_done:
+            build_state_after_move = env.get_build_state()
+            last_build_state = build_state_after_move
+            # === Build
+            # perform build
+            build_choice = build_agent.get_action(build_state_after_move, train=True)
+            last_build_choice = build_choice
+            build_reward, build_done = env.build(build_choice)
+            # train short memory and remember
+            build_state_new = env.get_build_state()
+            build_agent.train_short_memory(
+                build_state_after_move,
+                build_choice,
+                build_reward,
+                build_state_new,
+                build_done,
+            )
+            build_agent.remember(
+                build_state_after_move,
+                build_choice,
+                build_reward,
+                build_state_new,
+                build_done,
+            )
 
-        # train short memory
-        agent.train_short_memory(state_old, final_move, reward, state_new, done)
+        if move_done and move_reward > 0:
+            # Win
+            build_agent.change_last_memory_reward(move_reward)
 
-        # remember
-        agent.remember(state_old, final_move, reward, state_new, done)
-
-        if done:
+        if move_done or build_done:
             # train long memory, plot result
-            env.reset()
-            agent.n_games += 1
-            agent.train_long_memory()
+            move_agent.n_games += 1
+            move_agent.train_long_memory()
+            move_agent.decrease_epsilon()
 
+            build_agent.n_games += 1
+            build_agent.train_long_memory()
+            build_agent.decrease_epsilon()
+
+            score = env.score
             plot_scores.append(score)
-            total_score += score
-            mean_score = total_score / agent.n_games
+            mean_score = sum(plot_scores[-1000:]) / 1000
             plot_mean_scores.append(mean_score)
             plot(plot_scores, plot_mean_scores)
 
             print(
                 "Game",
-                agent.n_games,
+                move_agent.n_games,
                 "Score",
                 score,
                 "Average Score:",
                 round(mean_score, 2),
+                "Average Best :",
+                best_score_avg,
                 "Epsilon:",
-                agent.epsilon,
+                move_agent.epsilon,
             )
-            # env.stats()
-
-            agent.decrease_epsilon()
 
             current_episode += 1
             if current_episode >= episodes:
                 break
 
-            if current_episode % 10 == 0:
-                agent.save()
-
             if current_episode % 50 == 0:
-                average_test_score = test(episodes=150)
+                move_agent.save()
+                build_agent.save()
+                average_test_score = test(episodes=500, test=False)
                 plot_mean_test_scores.append(average_test_score)
                 plot_test(plot_mean_test_scores)
+
+                if average_test_score > best_score_avg:
+                    best_score_avg = average_test_score
+                    move_agent.save("best_move_agent")
+                    build_agent.save("best_build_agent")
+
+            env.reset()
 
 
 if __name__ == "__main__":
