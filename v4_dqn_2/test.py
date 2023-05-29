@@ -51,7 +51,6 @@ def test(delay=0.0, display=False, episodes=100, verbose=False, test=True, best=
 
             if not move_done:
                 build_state_after_move = env.get_build_state()
-
                 # === Build
                 # perform build
                 build_choice = build_agent.get_action(build_state_after_move)
@@ -66,6 +65,11 @@ def test(delay=0.0, display=False, episodes=100, verbose=False, test=True, best=
                         sleep(delay)
 
             if move_done or build_done:
+                break
+
+            # Move enemy
+            enemy_has_won = env.move_enemy()
+            if enemy_has_won:
                 break
 
         score = env.score
@@ -232,8 +236,8 @@ if __name__ == "__main__":
     # profiler.enable()
 
     # === Small model tests
-    # test(delay=0.6, display=True, episodes=1, test=True)
-    test(delay=0.6, display=True, episodes=1, test=False)
+    test(delay=0.6, display=True, episodes=1, test=True)
+    # test(delay=0.6, display=True, episodes=1, test=False)
     # test(delay=0.6, display=True, episodes=1, test=True, best=True)
     # test(delay=0.6, display=True, episodes=1, test=False, best=True)
 

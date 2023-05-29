@@ -3,16 +3,18 @@ from helper import plot, plot_test
 from agent import Agent
 from test import test
 
+current_episode = 0
+best_score_avg = 0
+
 
 def train():
+    global current_episode, best_score_avg
     plot_scores = []
     plot_mean_scores = []
     plot_mean_test_scores_test = []
-    plot_mean_test_scores_train = []
-    episodes = 15000
-    current_episode = 0
-    best_score_avg = 0
-    env = Env(test=False)
+    # plot_mean_test_scores_train = []
+    episodes = 40000
+    env = Env(test=True)
 
     move_agent = Agent(env.get_state_size(), env.get_action_size(), "move_agent")
     build_agent = Agent(env.get_state_size(), env.get_action_size(), "build_agent")
@@ -21,9 +23,6 @@ def train():
 
     print("NB_STATES:", env.get_state_size())
     print("NB_ACTIONS:", env.get_action_size())
-
-    last_build_state = None
-    last_build_choice = None
 
     while True:
         move_done, build_done = False, False
@@ -43,13 +42,11 @@ def train():
             move_state_old, move_choice, move_reward, move_state_new, move_done
         )
 
+        # === Build
         if not move_done:
             build_state_after_move = env.get_build_state()
-            last_build_state = build_state_after_move
-            # === Build
             # perform build
             build_choice = build_agent.get_action(build_state_after_move, train=True)
-            last_build_choice = build_choice
             build_reward, build_done = env.build(build_choice)
             # train short memory and remember
             build_state_new = env.get_build_state()
@@ -72,7 +69,8 @@ def train():
             # Win
             build_agent.change_last_memory_reward(move_reward)
 
-        if move_done or build_done:
+        def done():
+            global current_episode, best_score_avg
             # train long memory, plot result
             move_agent.n_games += 1
             move_agent.train_long_memory()
@@ -103,16 +101,17 @@ def train():
 
             current_episode += 1
             if current_episode >= episodes:
-                break
+                return True
 
+            # Save model and test
             if current_episode % 50 == 0:
                 move_agent.save()
                 build_agent.save()
-                average_test_score_test = test(episodes=250, test=True)
-                average_test_score_train = test(episodes=250, test=False)
+                average_test_score_test = test(episodes=500, test=True)
+                # average_test_score_train = test(episodes=250, test=False)
                 plot_mean_test_scores_test.append(average_test_score_test)
-                plot_mean_test_scores_train.append(average_test_score_train)
-                plot_test(plot_mean_test_scores_test, plot_mean_test_scores_train)
+                # plot_mean_test_scores_train.append(average_test_score_train)
+                plot_test(plot_mean_test_scores_test)
 
                 if average_test_score_test >= best_score_avg:
                     best_score_avg = average_test_score_test
@@ -120,6 +119,20 @@ def train():
                     build_agent.save("best_build_agent")
 
             env.reset()
+
+        if move_done or build_done:
+            if done():
+                break
+        else:
+            # Play enemy
+            has_enemy_won = env.move_enemy()
+
+            if has_enemy_won:
+                # Set the models last reward to -10
+                move_agent.change_last_memory_reward(-10)
+                build_agent.change_last_memory_reward(-10)
+                if done():
+                    break
 
 
 if __name__ == "__main__":

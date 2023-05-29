@@ -31,11 +31,8 @@ class Agent:
 
     def change_last_memory_reward(self, reward):
         # change the last memory reward
-        state, action, previous_reward, next_state, done = self.memory.pop()
-        if previous_reward >= 0:
-            self.memory.append((state, action, reward, next_state, done))
-        else:
-            self.memory.append((state, action, previous_reward, next_state, done))
+        state, action, _, next_state, done = self.memory.pop()
+        self.memory.append((state, action, reward, next_state, done))
 
     def train_long_memory(self):
         if len(self.memory) > BATCH_SIZE:

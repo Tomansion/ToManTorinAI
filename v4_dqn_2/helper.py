@@ -17,14 +17,15 @@ def plot(scores, mean_scores):
     plt.pause(0.001)
 
 
-def plot_test(mean_scores_test, mean_scores_train):
+def plot_test(mean_scores_test, mean_scores_train = None):
     plt.figure(3)
     plt.clf()
     plt.title("Testing...")
     plt.xlabel("Number of games")
     plt.ylabel("Scores")
     plt.plot(mean_scores_test)
-    plt.plot(mean_scores_train)
+    if mean_scores_train is not None:
+        plt.plot(mean_scores_train)
     # Save the figure
     plt.savefig("test_training_results.png")
     plt.pause(0.001)

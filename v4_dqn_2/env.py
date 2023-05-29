@@ -13,11 +13,13 @@ from helper import (
 
 
 # Env4:3 Multiple smaller flashlight with level to state,
-# Env5: Enemy pawn (ง •̀_•́)ง 
+# Env5: Enemy pawn (ง •̀_•́)ง
+#    - Alwars start from empty board
+#    - Negative reward on step
 
 
 # TODO: add height difference (-3 to 4) to state
-# TODO: negative reward on step and start from empty board
+
 BOARD_SIZE = 4
 
 NB_ACTIONS = 8
@@ -26,7 +28,12 @@ FLASHLIGHT_SIZE = BOARD_SIZE - 1
 FLASHLIGHT_BORDER_SIZE = FLASHLIGHT_SIZE * 2 - 1
 FLASHLIGHT_AREA = FLASHLIGHT_BORDER_SIZE**2
 
-NB_STATES = FLASHLIGHT_AREA * 5 + NB_ACTIONS + 1
+NB_STATES = FLASHLIGHT_AREA * 5  # Tiles
+NB_STATES += FLASHLIGHT_AREA  # Enemy pawn position
+NB_STATES += 1  # Player level
+NB_STATES += 1  # Enemy level
+NB_STATES += NB_ACTIONS  # Possible actions
+
 print("NB_STATES:", NB_STATES)
 
 
@@ -41,10 +48,15 @@ class Env:
         self.nb_out = 0
         self.nb_long = 0
         self.nb_high = 0
+        self.nb_enemy = 0
 
         # Build
         self.nb_build_out = 0
         self.nb_build_possible = 0
+        self.nb_build_enemy = 0
+
+        # Enemy
+        self.enemy_win = 0
 
         self.reset()
 
@@ -62,8 +74,17 @@ class Env:
 
         # Place pawn
         self.pawn_pos = [randint(0, BOARD_SIZE - 1), randint(0, BOARD_SIZE - 1)]
+        # Place enemy pawn
+        self.enemy_pos = [randint(0, BOARD_SIZE - 1), randint(0, BOARD_SIZE - 1)]
+        while self.enemy_pos == self.pawn_pos:
+            self.enemy_pos = [randint(0, BOARD_SIZE - 1), randint(0, BOARD_SIZE - 1)]
+
         if not self.test:
             self.board[self.pawn_pos[0]][self.pawn_pos[1]] = randint(0, 2)
+            self.board[self.enemy_pos[0]][self.enemy_pos[1]] = randint(0, 2)
+
+        if randint(0, 1) == 0:
+            self.move_enemy()
 
     def _reset_board(self):
         # Reset board
@@ -95,6 +116,13 @@ class Env:
             game_over = True
             reward = -5
             self.nb_high += 1
+            return reward, game_over
+
+        # Check if tile is not occupied
+        if new_pos == self.enemy_pos:
+            game_over = True
+            reward = -5
+            self.nb_enemy += 1
             return reward, game_over
 
         # Move pawn
@@ -141,10 +169,67 @@ class Env:
             self.nb_build_possible += 1
             return reward, game_over
 
+        # Check if tile is not occupied
+        if build_pos == self.enemy_pos:
+            game_over = True
+            reward = -5
+            self.nb_build_enemy += 1
+            return reward, game_over
+
         # Build
         self.board[build_pos[0]][build_pos[1]] += 1
 
         return reward, game_over
+
+    def move_enemy(self):
+        def get_enemy_random_move():
+            actions = np.arange(NB_ACTIONS)
+            np.random.shuffle(actions)
+
+            for action in actions:
+                new_pos = new_pos_from_action(self.enemy_pos, action)
+                if (
+                    is_tile_accessible(BOARD_SIZE, self.board, self.enemy_pos, new_pos)
+                    and new_pos != self.pawn_pos
+                ):
+                    return new_pos
+            return None
+
+        def get_enemy_random_build():
+            actions = np.arange(NB_ACTIONS)
+            np.random.shuffle(actions)
+
+            for action in actions:
+                new_pos = new_pos_from_action(self.enemy_pos, action)
+                if (
+                    not is_outside(BOARD_SIZE, new_pos)
+                    and new_pos != self.pawn_pos
+                    and self.board[new_pos[0]][new_pos[1]] != 4
+                ):
+                    return new_pos
+            return None
+
+        # Move
+        new_pos = get_enemy_random_move()
+        if new_pos is None:
+            # No move possible
+            return
+
+        self.enemy_pos = new_pos
+        enemy_level = self.board[self.enemy_pos[0]][self.enemy_pos[1]]
+        if enemy_level == 3:
+            self.score -= 1
+            self.total_score -= 1
+            self.enemy_win += 1
+            return True
+
+        # Build
+        build_pos = get_enemy_random_build()
+        if build_pos is None:
+            # No build possible
+            return
+
+        self.board[build_pos[0]][build_pos[1]] += 1
 
     def _get_board_state(self):
         # Display a the board with the pawn in the middle
@@ -165,8 +250,17 @@ class Env:
 
                     state_id += 1
 
+        # Add a layer for the enemy
+        for j in range(-(FLASHLIGHT_SIZE - 1), FLASHLIGHT_SIZE):
+            for i in range(-(FLASHLIGHT_SIZE - 1), FLASHLIGHT_SIZE):
+                pos_rel = [self.pawn_pos[0] + i, self.pawn_pos[1] + j]
+                if pos_rel == self.enemy_pos:
+                    state[state_id] = 1
+                state_id += 1
+
         # Add the player level to the state
         state[state_id] = self.board[self.pawn_pos[0]][self.pawn_pos[1]]
+        state[state_id + 1] = self.board[self.enemy_pos[0]][self.enemy_pos[1]]
 
         return state
 
@@ -176,7 +270,10 @@ class Env:
         # Add if actions are possible
         for i in range(NB_ACTIONS):
             new_pos = new_pos_from_action(self.pawn_pos, i)
-            if is_tile_accessible(BOARD_SIZE, self.board, self.pawn_pos, new_pos):
+            if (
+                is_tile_accessible(BOARD_SIZE, self.board, self.pawn_pos, new_pos)
+                and new_pos != self.enemy_pos
+            ):
                 state[-NB_ACTIONS + i] = 1
 
         if print_state:
@@ -190,8 +287,8 @@ class Env:
         # Add if actions are possible
         for i in range(NB_ACTIONS):
             new_pos = new_pos_from_action(self.pawn_pos, i)
-            if not is_outside(BOARD_SIZE, new_pos):
-                # We can't build if the tile is at level 4
+            if not is_outside(BOARD_SIZE, new_pos) and new_pos != self.enemy_pos:
+                # We can't build if the tile is at level 4 or if it's the enemy
                 if self.board[new_pos[0]][new_pos[1]] != 4:
                     state[-NB_ACTIONS + i] = 1
 
@@ -205,13 +302,21 @@ class Env:
         for j in range(BOARD_SIZE - 1, -1, -1):
             for i in range(BOARD_SIZE):
                 if self.pawn_pos == [i, j]:
-                    print("P", end=" ")
+                    print("👑", end="")
+                elif self.enemy_pos == [i, j]:
+                    print("👿", end="")
                 else:
                     level = self.board[i][j]
                     if level == 0:
-                        print("_", end=" ")
-                    else:
-                        print(level, end=" ")
+                        print("⬜", end="")
+                    elif level == 1:
+                        print("1️⃣", end=" ")
+                    elif level == 2:
+                        print("2️⃣", end=" ")
+                    elif level == 3:
+                        print("3️⃣", end=" ")
+                    elif level == 4:
+                        print("🔵", end="")
             print()
         print("Player level:", self.board[self.pawn_pos[0]][self.pawn_pos[1]])
 
@@ -230,7 +335,8 @@ class Env:
             print()
 
         print()
-        print("Player level:", state[-(NB_ACTIONS + 1)])
+        print("Ennemy level:", state[-(NB_ACTIONS + 1)])
+        print("Player level:", state[-(NB_ACTIONS + 2)])
         for i in range(NB_ACTIONS):
             if state[-NB_ACTIONS + i] == 1:
                 print(" - Possible action:", i)
@@ -239,18 +345,21 @@ class Env:
     def stats(self):
         print("nb total score:", self.total_score)
         print("nb win:", self.nb_win)
+        print("nb loose:", self.enemy_win)
         print("nb out:", self.nb_out)
         print("nb long:", self.nb_long)
         print("nb nb_high:", self.nb_high)
+        print("nb enemy:", self.nb_enemy)
         print("nb build out:", self.nb_build_out)
         print("nb build possible:", self.nb_build_possible)
+        print("nb build enemy:", self.nb_build_enemy)
 
 
 if __name__ == "__main__":
     from time import sleep
 
     def get_random_action_from_state(state):
-        # sleep(0.4)
+        sleep(0.4)
         possible_actions = state[-NB_ACTIONS:]
         possible_action_numbers = []
         for i in range(len(possible_actions)):
@@ -280,12 +389,12 @@ if __name__ == "__main__":
         actions[action] = 1
         return actions
 
-    env = Env(test=False)
+    # env = Env(test=False)
+    env = Env(test=True)
     # Play the game with user input
     print("============")
     while True:
         # Move
-
         env.get_move_state(print_state=True)
         env.render()
 
@@ -327,3 +436,12 @@ if __name__ == "__main__":
             env.render()
             env.stats()
             break
+
+        # Move enemy
+        enemy_has_won = env.move_enemy()
+        
+        if enemy_has_won:
+            env.render()
+            env.stats()
+            break
+
