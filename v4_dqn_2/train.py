@@ -7,7 +7,8 @@ from test import test
 def train():
     plot_scores = []
     plot_mean_scores = []
-    plot_mean_test_scores = []
+    plot_mean_test_scores_test = []
+    plot_mean_test_scores_train = []
     episodes = 15000
     current_episode = 0
     best_score_avg = 0
@@ -107,12 +108,14 @@ def train():
             if current_episode % 50 == 0:
                 move_agent.save()
                 build_agent.save()
-                average_test_score = test(episodes=500, test=False)
-                plot_mean_test_scores.append(average_test_score)
-                plot_test(plot_mean_test_scores)
+                average_test_score_test = test(episodes=250, test=True)
+                average_test_score_train = test(episodes=250, test=False)
+                plot_mean_test_scores_test.append(average_test_score_test)
+                plot_mean_test_scores_train.append(average_test_score_train)
+                plot_test(plot_mean_test_scores_test, plot_mean_test_scores_train)
 
-                if average_test_score > best_score_avg:
-                    best_score_avg = average_test_score
+                if average_test_score_test > best_score_avg:
+                    best_score_avg = average_test_score_test
                     move_agent.save("best_move_agent")
                     build_agent.save("best_build_agent")
 

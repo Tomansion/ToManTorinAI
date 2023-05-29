@@ -17,14 +17,14 @@ def plot(scores, mean_scores):
     plt.pause(0.001)
 
 
-def plot_test(mean_scores):
+def plot_test(mean_scores_test, mean_scores_train):
     plt.figure(3)
     plt.clf()
     plt.title("Testing...")
     plt.xlabel("Number of games")
     plt.ylabel("Scores")
-    plt.plot(mean_scores)
-    plt.savefig("training.png")
+    plt.plot(mean_scores_test)
+    plt.plot(mean_scores_train)
     plt.pause(0.001)
 
 
@@ -84,11 +84,11 @@ def place_next_to(board, pos):
             return new_pos
 
 
-def is_outside(board, coord):
+def is_outside(BOARD_SIZE, coord):
     return (
-        coord[0] > len(board) - 1
+        coord[0] > BOARD_SIZE - 1
         or coord[0] < 0
-        or coord[1] > len(board) - 1
+        or coord[1] > BOARD_SIZE - 1
         or coord[1] < 0
     )
 

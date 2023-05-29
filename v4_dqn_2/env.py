@@ -1,6 +1,7 @@
 from random import randint
 import numpy as np
 from helper import (
+    VEC_MAP,
     new_pos_from_action,
     get_random_empty_tile,
     get_random_different_than_tile,
@@ -12,94 +13,23 @@ from helper import (
 
 BOARD_SIZE = 5
 
-# Env4: Move and build solo, flashlight
 
-# After 12000 games:
-# Starting from empty board:
-# Average score over 10000 episodes: 5.104
-# nb total score: 51040
-# nb win: 5104
-# nb out: 0
-# nb long: 0
-# nb nb_high: 0
-# nb build out: 4896
-# nb build possible: 0
+# TODO: change the pos on fail
+# TODO: decrease flashlight size
+# TODO: Only have 0 and one in the flashlight
 
-# Starting from train board:
-# Average score over 10000 episodes: 0.3923
-# nb total score: 3923
-# nb win: 0
-# nb out: 0
-# nb long: 0
-# nb nb_high: 1340
-# nb build out: 8348
-# nb build possible: 312
-
-# After 12000 games:
-# Starting from empty board:
-# Average score over 10000 episodes: 2.444
-# nb total score: 24440
-# nb win: 2444
-# nb out: 0
-# nb long: 0
-# nb nb_high: 0
-# nb build out: 7556
-# nb build possible: 0
-
-# Starting from train board:
-# Average score over 10000 episodes: 0.5402
-# nb total score: 5402
-# nb win: 1
-# nb out: 0
-# nb long: 0
-# nb nb_high: 306
-# nb build out: 9490
-# nb build possible: 203
-
-# Full random test:
-# Test env:
-# Average score over 10000 episodes: 0.0003
-# nb total score: 3
-# nb win: 0
-# nb out: 5392
-# nb long: 0
-# nb nb_high: 320
-# nb build out: 4288
-# nb build possible: 0
-# Training env:
-# Testing random...
-# Average score over 10000 episodes: 0.039
-# nb total score: 390
-# nb win: 0
-# nb out: 4193
-# nb long: 0
-# nb nb_high: 2719
-# nb build out: 2709
-# nb build possible: 379
-
-# Full no mistake test:
-# Test env:
-# Average score over 10000 episodes: 1.4671
-# nb total score: 14671
-# nb win: 0
-# nb out: 2808
-# nb long: 5719
-# nb nb_high: 1473
-# nb build out: 0
-# nb build possible: 0
-# Training env:
-# Average score over 10000 episodes: 2.7068
-# nb total score: 27068
-# nb win: 27
-# nb out: 3690
-# nb long: 3631
-# nb nb_high: 2630
-# nb build out: 17
-# nb build possible: 7
+# Env4:2: Move and build solo, flashlight * 5 for each tower state
+# Multiple flashlight : Not training
+# Multiple flashlight with bigger model : Not training
 
 
 NB_ACTIONS = 8
-NB_STATES = (BOARD_SIZE * 2 - 1) ** 2 + NB_ACTIONS
+
+FLASHLIGHT_SIZE = BOARD_SIZE * 2 - 1
+FLASHLIGHT_AREA = FLASHLIGHT_SIZE**2
+
+NB_STATES = FLASHLIGHT_AREA * 5 + NB_ACTIONS
+print("NB_STATES:", NB_STATES)
 
 
 class Env:
@@ -156,7 +86,7 @@ class Env:
         new_pos = new_pos_from_action(self.pawn_pos, action)
 
         # check if out of bounds
-        if is_outside(self.board, new_pos):
+        if is_outside(BOARD_SIZE, new_pos):
             game_over = True
             reward = -10
             self.nb_out += 1
@@ -199,7 +129,7 @@ class Env:
         build_pos = new_pos_from_action(self.pawn_pos, action)
 
         # check if out of bounds
-        if is_outside(self.board, build_pos):
+        if is_outside(BOARD_SIZE, build_pos):
             game_over = True
             reward = -10
             self.nb_build_out += 1
@@ -218,80 +148,65 @@ class Env:
 
         return reward, game_over
 
-    def get_move_state(self, print_state=False):
+    def _get_board_state(self, print_state=False):
         # Display a the board with the pawn in the middle
-        state = []
-        for j in range(-4, 5):
-            for i in range(-4, 5):
-                pos_rel = [self.pawn_pos[0] + i, self.pawn_pos[1] + j]
+        state = [0] * NB_STATES
+        state_id = 0
+        for tower_lever in range(5):
+            for j in range(-4, 5):
+                for i in range(-4, 5):
+                    pos_rel = [self.pawn_pos[0] + i, self.pawn_pos[1] + j]
 
-                if is_outside(self.board, pos_rel):
-                    state.append(-1)
-                else:
-                    board_value = self.board[pos_rel[0]][pos_rel[1]]
-                    state.append(board_value)
+                    if is_outside(BOARD_SIZE, pos_rel):
+                        state[state_id] = -1
+                    else:
+                        board_value = self.board[pos_rel[0]][pos_rel[1]]
+                        if board_value == tower_lever:
+                            state[state_id] = 1
+
+                    state_id += 1
 
         if print_state:
-            for j in range(8 - 1, -1, -1):
-                for i in range(9):
-                    print(state[j * 9 + i], end=" ")
+            for tower_lever in range(5):
+                for j in range(8 - 1, -1, -1):
+                    for i in range(9):
+                        print(state[j * 9 + i + tower_lever * FLASHLIGHT_AREA], end=" ")
+                    print()
                 print()
-            print()
+
+        return state
+
+    def get_move_state(self, print_state=False):
+        state = self._get_board_state(print_state)
 
         # Add if actions are possible
         for i in range(NB_ACTIONS):
             new_pos = new_pos_from_action(self.pawn_pos, i)
-            if is_outside(self.board, new_pos):
-                state.append(0)
-            elif not is_tile_accessible(self.board, self.pawn_pos, new_pos):
-                state.append(0)
-            else:
-                state.append(1)
+            if is_tile_accessible(self.board, self.pawn_pos, new_pos):
+                state[-NB_ACTIONS + i] = 1
 
-            if print_state:
-                print(str(i) + ":", state[-1])
+            if print_state and state[-1] == 1:
+                print(str(i), end=", ")
 
-        if len(state) != NB_STATES:
-            raise Exception("state size is not correct")
         return state
 
     def get_build_state(self, print_state=False):
-        # Display a the board with the pawn in the middle
-        state = []
-        for j in range(-4, 5):
-            for i in range(-4, 5):
-                pos_rel = [self.pawn_pos[0] + i, self.pawn_pos[1] + j]
-
-                if is_outside(self.board, pos_rel):
-                    state.append(-1)
-                else:
-                    board_value = self.board[pos_rel[0]][pos_rel[1]]
-                    state.append(board_value)
-
-        if print_state:
-            for j in range(8 - 1, -1, -1):
-                for i in range(9):
-                    print(state[j * 9 + i], end=" ")
-                print()
-            print()
+        state = self._get_board_state(print_state)
 
         # Add if actions are possible
         for i in range(NB_ACTIONS):
             new_pos = new_pos_from_action(self.pawn_pos, i)
-            if is_outside(self.board, new_pos):
-                state.append(0)
-            else:
-                pos_level = self.board[new_pos[0]][new_pos[1]]
-                if pos_level == 4:
-                    state.append(0)
-                else:
-                    state.append(1)
+            if not is_outside(BOARD_SIZE, new_pos):
+                # We can't build if the tile is at level 4
+                if self.board[new_pos[0]][new_pos[1]] != 4:
+                    state[-NB_ACTIONS + i] = 1
 
-            if print_state:
-                print(str(i) + ":", state[-1])
+            if print_state and state[-1] == 1:
+                print(str(i), end=", ")
 
-        if len(state) != NB_STATES:
-            raise Exception("state size is not correct")
+        if print_state:
+            print()
+
         return state
 
     def render(self):
@@ -307,6 +222,7 @@ class Env:
                     else:
                         print(level, end=" ")
             print()
+        print("Player level:", self.board[self.pawn_pos[0]][self.pawn_pos[1]])
 
     def stats(self):
         print("nb total score:", self.total_score)
@@ -336,6 +252,19 @@ if __name__ == "__main__":
         actions[action] = 1
         return actions
 
+    def get_user_action_from_state(type, state):
+        possible_actions = state[-NB_ACTIONS:]
+        print()
+        for i in range(len(possible_actions)):
+            if possible_actions[i] == 1:
+                print(" - ", i, VEC_MAP[i])
+        print()
+        action = int(input(type + " Action: "))
+        print("action:", action)
+        actions = np.zeros(NB_ACTIONS)
+        actions[action] = 1
+        return actions
+
     env = Env(test=False)
     # Play the game with user input
     print("============")
@@ -344,11 +273,12 @@ if __name__ == "__main__":
         env.get_move_state(print_state=True)
         env.render()
         sleep(0.4)
-        # action = int(input("Move action: "))
 
         # Get action from the last 8 state values (the possible actions)
         state = env.get_move_state()
-        actions = get_random_action_from_state(state)
+        # actions = get_random_action_from_state(state)
+        actions = get_user_action_from_state("Move", state)
+
         reward, done = env.move(actions)
         env.get_move_state(print_state=True)
         print("reward:", reward)
@@ -360,15 +290,18 @@ if __name__ == "__main__":
             env.stats()
             break
 
+        if reward > 0:
+            continue
+
         # Build
         env.get_build_state(print_state=True)
         env.render()
         sleep(0.4)
 
-        # action = int(input("Build action: "))
         # Get action from the last 8 state values (the possible actions)
         state = env.get_build_state()
-        actions = get_random_action_from_state(state)
+        # actions = get_random_action_from_state(state)
+        actions = get_user_action_from_state("Build", state)
         reward, done = env.build(actions)
         env.get_build_state(print_state=True)
 

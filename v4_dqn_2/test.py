@@ -3,16 +3,25 @@ from agent import Agent
 from time import sleep
 
 
-def test(delay=0.0, display=False, episodes=100, verbose=False, test=True):
+def test(delay=0.0, display=False, episodes=100, verbose=False, test=True, best=False):
     env = Env(test=test)
-    move_agent = Agent(env.get_state_size(), env.get_action_size(), "move_agent")
-    build_agent = Agent(env.get_state_size(), env.get_action_size(), "build_agent")
+
+    if best:
+        move_agent = Agent(env.get_state_size(), env.get_action_size(), "best_move_agent")
+        build_agent = Agent(env.get_state_size(), env.get_action_size(), "best_build_agent")
+    else:
+        move_agent = Agent(env.get_state_size(), env.get_action_size(), "move_agent")
+        build_agent = Agent(env.get_state_size(), env.get_action_size(), "build_agent")
 
     move_agent.load()
     build_agent.load()
 
     score_total = 0
-    print("Testing...")
+    
+    if test:
+        print("Testing on test env...")
+    else:
+        print("Testing on train env...")
 
     for i in range(episodes):
         env.reset()
@@ -216,14 +225,29 @@ def test_no_mistake(delay=0.0, display=False, episodes=100, verbose=False, test=
 
 
 if __name__ == "__main__":
-    # test(delay=0.4, display=True, episodes=1, test=True)
-    # test(delay=0.4, display=True, episodes=1, test=False)
-    # test(episodes=1000, verbose=True, test=True)
+    # Profiling
+    import pstats
+    import cProfile
+    # profiler = cProfile.Profile()
+    # profiler.enable()
 
-    test(episodes=10000, verbose=False, test=True)
-    test(episodes=10000, verbose=False, test=False)
+    # === Small model tests
+    test(delay=0.6, display=True, episodes=2, test=True)
+    # test(delay=0.6, display=True, episodes=2, test=False)
+    # test(delay=0.6, display=True, episodes=2, test=True, best=True)
+    # test(delay=0.6, display=True, episodes=2, test=False, best=True)
 
-    # test_random(episodes=10000, verbose=False, test=True)
+    # === Big model tests
+    # test(episodes=1000, verbose=False, test=True)
+    # test(episodes=1000, verbose=False, test=False)
+
+    # === Test random
+    # test_random(episodes=1000, verbose=False, test=True)
     # test_random(episodes=10000, verbose=False, test=False)
     # test_no_mistake(episodes=10000, verbose=True, test=True)
     # test_no_mistake(episodes=10000, verbose=True, test=False)
+
+    # profiler.disable()
+    # stats = pstats.Stats(profiler)
+    # stats.sort_stats(pstats.SortKey.TIME)
+    # stats.dump_stats(filename="stats.prof")
