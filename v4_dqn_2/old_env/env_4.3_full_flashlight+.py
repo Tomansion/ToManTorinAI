@@ -12,8 +12,69 @@ from helper import (
 )
 
 
-# Env4:3 Multiple smaller flashlight with level to state,
-# Env5: Enemy pawn (ง •̀_•́)ง 
+# Env4:2: Move and build solo, flashlight * 5 for each tower state
+# Multiple flashlight: Not training
+# Multiple flashlight with bigger model: Not training
+# Multiple flashlight and changing the pos on fail: Not training
+# Multiple smaller flashlight: Not training
+#   Average score over 1000 episodes: 0.0
+#   nb total score: 0
+#   nb win: 0
+#   nb out: 0
+#   nb long: 0
+#   nb nb_high: 802
+#   nb build out: 0
+#   nb build possible: 198
+#   Testing on train env...
+#   Average score over 1000 episodes: 0.228
+#   nb total score: 228
+#   nb win: 0
+#   nb out: 0
+#   nb long: 0
+#   nb nb_high: 803
+#   nb build out: 0
+#   nb build possible: 197
+
+# Env4:3 Multiple smaller flashlight with level to state, only have 0 and one in the flashlight
+#   It seems to be training ! (ᵔ ͜ʖᵔ) (with board size 4, smaller flashlight)
+#   After 5000 episodes:
+#     Average score over 1000 episodes: 8.71
+#     nb total score: 8710
+#     nb win: 871
+#     nb out: 0
+#     nb long: 0
+#     nb nb_high: 61
+#     nb build out: 0
+#     nb build possible: 68
+#     Testing on train env...
+#     Average score over 1000 episodes: 3.224
+#     nb total score: 3224
+#     nb win: 106
+#     nb out: 0
+#     nb long: 0
+#     nb nb_high: 781
+#     nb build out: 0
+#     nb build possible: 113
+
+#   After 10000 episodes:
+#     Testing on test env...
+#     Average score over 1000 episodes: 5.027
+#     nb total score: 5027
+#     nb win: 496
+#     nb out: 0
+#     nb long: 0
+#     nb nb_high: 0
+#     nb build out: 0
+#     nb build possible: 504
+#     Testing on train env...
+#     Average score over 1000 episodes: 4.679
+#     nb total score: 4679
+#     nb win: 221
+#     nb out: 0
+#     nb long: 1
+#     nb nb_high: 147
+#     nb build out: 0
+#     nb build possible: 631
 
 
 # TODO: add height difference (-3 to 4) to state

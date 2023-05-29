@@ -114,7 +114,7 @@ def train():
                 plot_mean_test_scores_train.append(average_test_score_train)
                 plot_test(plot_mean_test_scores_test, plot_mean_test_scores_train)
 
-                if average_test_score_test > best_score_avg:
+                if average_test_score_test >= best_score_avg:
                     best_score_avg = average_test_score_test
                     move_agent.save("best_move_agent")
                     build_agent.save("best_build_agent")
