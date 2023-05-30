@@ -236,13 +236,13 @@ if __name__ == "__main__":
     # profiler.enable()
 
     # === Small model tests
-    test(delay=0.6, display=True, episodes=1, test=True)
+    # test(delay=0.6, display=True, episodes=1, test=True)
     # test(delay=0.6, display=True, episodes=1, test=False)
     # test(delay=0.6, display=True, episodes=1, test=True, best=True)
     # test(delay=0.6, display=True, episodes=1, test=False, best=True)
 
     # === Big model tests
-    # test(episodes=1000, verbose=False, test=True)
+    test(episodes=10000, verbose=True, test=True)
     # test(episodes=1000, verbose=False, test=False)
 
     # === Test random

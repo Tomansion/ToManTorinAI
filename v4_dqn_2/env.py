@@ -17,6 +17,18 @@ from helper import (
 #    - Alwars start from empty board
 #    - Negative reward on step
 
+# After 40000 episodes:
+#   Average score over 10000 episodes: 3.6537
+#   nb total score: 36537
+#   nb win: 1134
+#   nb loose: 2185
+#   nb out: 5
+#   nb long: 316
+#   nb nb_high: 1466
+#   nb enemy: 494
+#   nb build out: 52
+#   nb build possible: 3856
+#   nb build enemy: 515
 
 # TODO: add height difference (-3 to 4) to state
 
