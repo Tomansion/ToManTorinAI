@@ -7,7 +7,7 @@ MAX_MEMORY = 100000
 BATCH_SIZE = 1000
 EPS_START = 1
 EPS_END = 0.1
-EPS_DECAY = 0.9995
+EPS_DECAY = 0.9993
 LR = 0.001
 
 
@@ -51,27 +51,15 @@ class Agent:
     def train_short_memory(self, state, action, reward, next_state, done):
         self.trainer.train_step(state, action, reward, next_state, done)
 
-    def get_action(self, state, possible_moves, train=False):
+    def get_action(self, state, train=False):
         # random moves: tradeoff exploration / exploitation
         final_move = [0] * self.nb_actions
         if train and random.random() < self.epsilon:
-            # Choose random move from possible moves
-            # possible_moves : [0, 1, 0, 1, 0, 1, 0, 1]
-            valid_moves = [i for i, x in enumerate(possible_moves) if x == 1]
-            if len(valid_moves) == 0:
-                final_move[0] = 1
-                return final_move
-            random_index = random.choice(valid_moves)
-            final_move[random_index] = 1
-            
+            move = random.randint(0, self.nb_actions - 1)
+            final_move[move] = 1
         else:
             state0 = torch.tensor(state, dtype=torch.float)
             prediction = self.model(state0)
-            prediction = prediction + abs(torch.min(prediction) + 0.1)
-
-            # Masking the invalid moves
-            prediction = prediction * torch.tensor(possible_moves, dtype=torch.float)
-
             move = int(torch.argmax(prediction).item())
             final_move[move] = 1
 

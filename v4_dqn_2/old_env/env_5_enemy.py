@@ -12,83 +12,25 @@ from helper import (
 )
 
 
-# (prev) Env5: Enemy pawn (ง •̀_•́)ง
-# - Feed corrected action to the model
-# - Stop feeding possible actions to the model
+# (prev) Env4:3 Multiple smaller flashlight with level to state,
+# Env5: Enemy pawn (ง •̀_•́)ง
+#    - Alwars start from empty board
 
-# 1000 training: Average score over 3000 episodes: 1.304
-# nb total score: 3912
-# nb win: 2
-# nb loose: 843
-# nb out: 967
-# nb long: 77
-# nb nb_high: 736
-# nb enemy: 138
-# nb build out: 167
-# nb build possible: 66
-# nb build enemy: 4
+# After 40000 episodes:
+#   Average score over 10000 episodes: 3.6537
+#   nb total score: 36537
+#   nb win: 1134
+#   nb loose: 2185
+#   nb out: 5
+#   nb long: 316
+#   nb nb_high: 1466
+#   nb enemy: 494
+#   nb build out: 52
+#   nb build possible: 3856
+#   nb build enemy: 515
 
-# - -1 reward for each move
-
-# Average score over 3000 episodes: 1.988
-# nb total score: 5964
-# nb win: 19
-# nb loose: 893
-# nb out: 1333
-# nb long: 145
-# nb nb_high: 508
-# nb enemy: 12
-# nb build out: 45
-# nb build possible: 44
-# nb build enemy: 1
-
-# - Increase penalty for losing and -1 reward for each build
-# Average score over 3000 episodes: 1.5316666666666667
-# nb total score: 4595
-# nb win: 13
-# nb loose: 571
-# nb out: 1291
-# nb long: 55
-# nb nb_high: 861
-# nb enemy: 28
-# nb build out: 54
-# nb build possible: 121
-# nb build enemy: 7
-
-# - With board size 5 and flashlight size 4
-# Average score over 3000 episodes: 0.7673333333333333
-# nb total score: 2302
-# nb win: 0
-# nb loose: 395
-# nb out: 2303
-# nb long: 16
-# nb nb_high: 268
-# nb enemy: 12
-# nb build out: 4
-# nb build possible: 1
-# nb build enemy: 1
-
-# - Increase/Decrease reward for number of available moves and build
-# - Decrease and game over if no available moves
-# - Back to 4 size board
-# Average score over 3000 episodes: 1.1476666666666666
-# nb total score: 3443
-# nb win: 0
-# nb loose: 2072
-# nb long: 262
-# nb stuck: 20
-# nb stuck build: 0
-# nb out: 141
-# nb nb_high: 278
-# nb enemy: 47
-# nb build out: 115
-# nb build possible: 50
-# nb build enemy: 15
-
-
-# - Train with obvious moves
-
-
+# TODO: add height difference (-3 to 4) to state
+# TODO: Negative reward on step
 BOARD_SIZE = 4
 
 NB_ACTIONS = 8
@@ -101,6 +43,7 @@ NB_STATES = FLASHLIGHT_AREA * 5  # Tiles
 NB_STATES += FLASHLIGHT_AREA  # Enemy pawn position
 NB_STATES += 1  # Player level
 NB_STATES += 1  # Enemy level
+NB_STATES += NB_ACTIONS  # Possible actions
 
 print("NB_STATES:", NB_STATES)
 
@@ -117,7 +60,6 @@ class Env:
         self.nb_long = 0
         self.nb_high = 0
         self.nb_enemy = 0
-        self.nb_stuck = 0
 
         # Build
         self.nb_build_out = 0
@@ -168,7 +110,7 @@ class Env:
                     self.board[pos[0]][pos[1]] += 1
 
     def move(self, action):
-        reward = -1
+        reward = 0
         game_over = False
         action = np.argmax(action)
         new_pos = new_pos_from_action(self.pawn_pos, action)
@@ -213,23 +155,12 @@ class Env:
             game_over = True
             self.nb_long += 1
 
-        # Get nb possible moves
-        available_moves = self._get_available_moves()
-        nb_available_moves = sum(available_moves)
-
-        reward += nb_available_moves - 4
-
-        if nb_available_moves == 0:
-            game_over = True
-            reward = -10
-            self.nb_stuck += 1
-
         self.turn += 1
 
         return reward, game_over
 
     def build(self, action):
-        reward = -1
+        reward = 0
         game_over = False
         action = np.argmax(action)
         build_pos = new_pos_from_action(self.pawn_pos, action)
@@ -258,12 +189,6 @@ class Env:
 
         # Build
         self.board[build_pos[0]][build_pos[1]] += 1
-
-        # Get nb possible build
-        available_build = self._get_available_build()
-        nb_available_build = sum(available_build)
-
-        reward += nb_available_build - 4
 
         return reward, game_over
 
@@ -350,49 +275,38 @@ class Env:
 
         return state
 
-    def _get_available_moves(self):
-        possible_actions = [0] * NB_ACTIONS
+    def get_move_state(self, print_state=False):
+        state = self._get_board_state()
+
+        # Add if actions are possible
         for i in range(NB_ACTIONS):
             new_pos = new_pos_from_action(self.pawn_pos, i)
             if (
                 is_tile_accessible(BOARD_SIZE, self.board, self.pawn_pos, new_pos)
                 and new_pos != self.enemy_pos
             ):
-                possible_actions[i] = 1
-        return possible_actions
-
-    def _get_available_build(self):
-        possible_actions = [0] * NB_ACTIONS
-        for i in range(NB_ACTIONS):
-            new_pos = new_pos_from_action(self.pawn_pos, i)
-            if not is_outside(BOARD_SIZE, new_pos) and new_pos != self.enemy_pos:
-                # We can't build if the tile is at level 4 or if it's the enemy
-                if self.board[new_pos[0]][new_pos[1]] != 4:
-                    possible_actions[i] = 1
-
-        return possible_actions
-
-    def get_move_state(self, print_state=False):
-        state = self._get_board_state()
-
-        # Add if actions are possible
-        possible_actions = self._get_available_moves()
+                state[-NB_ACTIONS + i] = 1
 
         if print_state:
             self.display_state(state)
 
-        return state, possible_actions
+        return state
 
     def get_build_state(self, print_state=False):
         state = self._get_board_state()
 
         # Add if actions are possible
-        possible_actions = self._get_available_build()
+        for i in range(NB_ACTIONS):
+            new_pos = new_pos_from_action(self.pawn_pos, i)
+            if not is_outside(BOARD_SIZE, new_pos) and new_pos != self.enemy_pos:
+                # We can't build if the tile is at level 4 or if it's the enemy
+                if self.board[new_pos[0]][new_pos[1]] != 4:
+                    state[-NB_ACTIONS + i] = 1
 
         if print_state:
             self.display_state(state)
 
-        return state, possible_actions
+        return state
 
     def render(self):
         print()
@@ -434,18 +348,17 @@ class Env:
         print()
         print("Ennemy level:", state[-(NB_ACTIONS + 1)])
         print("Player level:", state[-(NB_ACTIONS + 2)])
-        # for i in range(NB_ACTIONS):
-        #     if state[-NB_ACTIONS + i] == 1:
-        #         print(" - Possible action:", i)
+        for i in range(NB_ACTIONS):
+            if state[-NB_ACTIONS + i] == 1:
+                print(" - Possible action:", i)
         print()
 
     def stats(self):
         print("nb total score:", self.total_score)
         print("nb win:", self.nb_win)
         print("nb loose:", self.enemy_win)
-        print("nb long:", self.nb_long)
-        print("nb stuck:", self.nb_stuck)
         print("nb out:", self.nb_out)
+        print("nb long:", self.nb_long)
         print("nb nb_high:", self.nb_high)
         print("nb enemy:", self.nb_enemy)
         print("nb build out:", self.nb_build_out)
@@ -473,8 +386,14 @@ if __name__ == "__main__":
         return actions
 
     def get_user_action_from_state(type, state):
-        current_level = state[-2]
+        possible_actions = state[-NB_ACTIONS:]
+        current_level = state[-NB_ACTIONS - 1]
         print("current_level:", current_level)
+        print()
+        for i in range(len(possible_actions)):
+            if possible_actions[i] == 1:
+                print(" - ", i, VEC_MAP[i])
+        print()
         action = int(input(type + " Action: "))
         print("action:", action)
         actions = np.zeros(NB_ACTIONS)
@@ -491,9 +410,9 @@ if __name__ == "__main__":
         env.render()
 
         # Get action from the last 8 state values (the possible actions)
-        state, _ = env.get_move_state()
-        # actions = get_random_action_from_state(state)
-        actions = get_user_action_from_state("Move", state)
+        state = env.get_move_state()
+        actions = get_random_action_from_state(state)
+        # actions = get_user_action_from_state("Move", state)
 
         reward, done = env.move(actions)
         env.get_move_state(print_state=True)
@@ -514,9 +433,9 @@ if __name__ == "__main__":
         env.render()
 
         # Get action from the last 8 state values (the possible actions)
-        state, _ = env.get_build_state()
-        # actions = get_random_action_from_state(state)
-        actions = get_user_action_from_state("Build", state)
+        state = env.get_build_state()
+        actions = get_random_action_from_state(state)
+        # actions = get_user_action_from_state("Build", state)
         reward, done = env.build(actions)
         env.get_build_state(print_state=True)
 
@@ -531,8 +450,9 @@ if __name__ == "__main__":
 
         # Move enemy
         enemy_has_won = env.move_enemy()
-
+        
         if enemy_has_won:
             env.render()
             env.stats()
             break
+

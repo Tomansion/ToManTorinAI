@@ -7,12 +7,8 @@ def test(delay=0.0, display=False, episodes=100, verbose=False, test=True, best=
     env = Env(test=test)
 
     if best:
-        move_agent = Agent(
-            env.get_state_size(), env.get_action_size(), "best_move_agent"
-        )
-        build_agent = Agent(
-            env.get_state_size(), env.get_action_size(), "best_build_agent"
-        )
+        move_agent = Agent(env.get_state_size(), env.get_action_size(), "best_move_agent")
+        build_agent = Agent(env.get_state_size(), env.get_action_size(), "best_build_agent")
     else:
         move_agent = Agent(env.get_state_size(), env.get_action_size(), "move_agent")
         build_agent = Agent(env.get_state_size(), env.get_action_size(), "build_agent")
@@ -21,7 +17,7 @@ def test(delay=0.0, display=False, episodes=100, verbose=False, test=True, best=
     build_agent.load()
 
     score_total = 0
-
+    
     if test:
         print("Testing on test env...")
     else:
@@ -37,11 +33,11 @@ def test(delay=0.0, display=False, episodes=100, verbose=False, test=True, best=
         while True:
             move_done, build_done = False, False
             # get old state
-            move_state_old, possible_moves = env.get_move_state()
+            move_state_old = env.get_move_state()
 
             # === Move
             # perform move
-            move_choice = move_agent.get_action(move_state_old, possible_moves)
+            move_choice = move_agent.get_action(move_state_old)
             move_reward, move_done = env.move(move_choice)
             if display:
                 print()
@@ -54,12 +50,10 @@ def test(delay=0.0, display=False, episodes=100, verbose=False, test=True, best=
                     sleep(delay)
 
             if not move_done:
-                build_state_after_move, possible_moves = env.get_build_state()
+                build_state_after_move = env.get_build_state()
                 # === Build
                 # perform build
-                build_choice = build_agent.get_action(
-                    build_state_after_move, possible_moves
-                )
+                build_choice = build_agent.get_action(build_state_after_move)
                 build_reward, build_done = env.build(build_choice)
                 if display:
                     print("Build choice:", build_choice)
@@ -238,7 +232,6 @@ if __name__ == "__main__":
     # Profiling
     import pstats
     import cProfile
-
     # profiler = cProfile.Profile()
     # profiler.enable()
 
@@ -249,7 +242,7 @@ if __name__ == "__main__":
     # test(delay=0.6, display=True, episodes=1, test=False, best=True)
 
     # === Big model tests
-    test(episodes=3000, verbose=True, test=True)
+    test(episodes=10000, verbose=True, test=True)
     # test(episodes=1000, verbose=False, test=False)
 
     # === Test random
