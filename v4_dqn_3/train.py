@@ -3,6 +3,7 @@ from helper import plot, plot_test
 from agent import Agent
 from test import test
 
+from enemies import random_enemy
 
 def train():
     current_episode = 0
@@ -13,7 +14,7 @@ def train():
     plot_mean_test_scores_test = []
     # plot_mean_test_scores_train = []
     episodes = 50000
-    env = Env(test=True)
+    env = Env(test=True, enemy=random_enemy())
 
     agent = Agent(env.get_state_size(), env.get_action_size(), "agent")
     agent.save()

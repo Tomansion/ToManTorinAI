@@ -11,6 +11,7 @@ from helper import (
     is_outside,
 )
 
+
 # (prev) Env5: Enemy pawn (ง •̀_•́)ง
 # - Feed corrected action to the model
 # - Stop feeding possible actions to the model
@@ -68,9 +69,8 @@ print("NB_STATES:", NB_STATES)
 
 
 class Env:
-    def __init__(self, test=False, enemy=None):
+    def __init__(self, test=False):
         self.test = test
-        self.enemy = enemy
         self.board = create_empty_board(BOARD_SIZE)
 
         # Stats
@@ -167,22 +167,47 @@ class Env:
         return -1, False
 
     def move_enemy(self):
-        if self.enemy is None:
-            return False
+        def get_enemy_random_move():
+            actions = np.arange(8)
+            np.random.shuffle(actions)
 
-        move_pos, build_pos = self.enemy.get_action(
-            self.board, self.enemy_pos, self.pawn_pos
-        )
-        if move_pos is None:
+            for action in actions:
+                new_pos = new_pos_from_action(self.enemy_pos, action)
+                if (
+                    is_tile_accessible(BOARD_SIZE, self.board, self.enemy_pos, new_pos)
+                    and new_pos != self.pawn_pos
+                ):
+                    return new_pos
+            return None
+
+        def get_enemy_random_build():
+            actions = np.arange(8)
+            np.random.shuffle(actions)
+
+            for action in actions:
+                new_build_pos = new_pos_from_action(self.enemy_pos, action)
+                if (
+                    not is_outside(BOARD_SIZE, new_build_pos)
+                    and new_build_pos != self.pawn_pos
+                    and self.board[new_build_pos[0]][new_build_pos[1]] != 4
+                ):
+                    return new_build_pos
+            return None
+
+        # Move
+        new_pos = get_enemy_random_move()
+        if new_pos is None:
             # No move possible
             return
 
-        self.enemy_pos = move_pos
+        self.enemy_pos = new_pos
         enemy_level = self.board[self.enemy_pos[0]][self.enemy_pos[1]]
         if enemy_level == 3:
             return True
 
         # Build
+        build_pos = get_enemy_random_build()
+
         if build_pos is None:
             # No build possible
             self.render()
