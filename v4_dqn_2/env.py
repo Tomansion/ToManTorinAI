@@ -68,6 +68,7 @@ from helper import (
 # nb build possible: 1
 # nb build enemy: 1
 
+# 5.6
 # - Increase/Decrease reward for number of available moves and build
 # - Decrease and game over if no available moves
 # - Back to 4 size board
@@ -84,6 +85,35 @@ from helper import (
 # nb build out: 115
 # nb build possible: 50
 # nb build enemy: 15
+
+# 5.7
+# - Removed the reward change on available move
+# 50000 train episodes
+#   Best model:
+# nb total score: 17938
+# nb win: 1341
+# nb loose: 438
+# nb long: 1
+# nb stuck: 52
+# nb out: 971
+# nb nb_high: 173
+# nb enemy: 12
+# nb build out: 9
+# nb build possible: 3
+# nb build enemy: 0
+#   Last model :( :
+# nb total score: 564
+# nb win: 0
+# nb loose: 972
+# nb long: 6
+# nb stuck: 25
+# nb out: 1968
+# nb nb_high: 23
+# nb enemy: 4
+# nb build out: 2
+# nb build possible: 0
+# nb build enemy: 0
+
 
 
 # - Train with obvious moves
@@ -217,8 +247,6 @@ class Env:
         available_moves = self._get_available_moves()
         nb_available_moves = sum(available_moves)
 
-        reward += nb_available_moves - 4
-
         if nb_available_moves == 0:
             game_over = True
             reward = -10
@@ -258,12 +286,6 @@ class Env:
 
         # Build
         self.board[build_pos[0]][build_pos[1]] += 1
-
-        # Get nb possible build
-        available_build = self._get_available_build()
-        nb_available_build = sum(available_build)
-
-        reward += nb_available_build - 4
 
         return reward, game_over
 
