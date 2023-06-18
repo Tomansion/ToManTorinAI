@@ -12,19 +12,23 @@ def plot(mean_scores):
     plt.title("Training...")
     plt.xlabel("Number of games")
     plt.ylabel("Scores")
+    # Set min and max values for the axes
+    plt.ylim(0, 1)
     plt.plot(mean_scores)
     plt.pause(0.001)
 
 
-def plot_test(plot_x, mean_scores_test):
+def plot_test(plot_x, mean_scores_test, model_name="agent"):
     plt.figure(3)
     plt.clf()
     plt.title("Testing...")
     plt.xlabel("Number of games")
     plt.ylabel("Scores")
+    # Set min and max values for the axes
+    plt.ylim(0, 1)
     plt.plot(plot_x, mean_scores_test)
     # Save the figure
-    plt.savefig("test_training_results.png")
+    plt.savefig(model_name + "_test_results.png")
     plt.pause(0.001)
 
 
@@ -40,7 +44,7 @@ VEC_MAP = {
 }
 
 
-def new_pos_from_action(pos, action):
+def new_pos_from_action(pos: tuple, action: int):
     # | Vec   |      |      |     |     | Id  |     |     |
     # | ----- | ---- | ---- | --- | --- | --- | --- | --- |
     # | -1 1  | 0 1  | 1 1  |     |     | 0   | 1   | 2   |
@@ -48,9 +52,17 @@ def new_pos_from_action(pos, action):
     # | -1 -1 | 0 -1 | 1 -1 |     |     | 6   | 5   | 4   |
 
     pos_vec = VEC_MAP[action]
-    new_pos = [pos[0] + pos_vec[0], pos[1] + pos_vec[1]]
+    new_pos = (pos[0] + pos_vec[0], pos[1] + pos_vec[1])
 
     return new_pos
+
+
+def action_from_pos(pos: tuple, new_pos: tuple):
+    for action, vec in VEC_MAP.items():
+        if (pos[0] + vec[0], pos[1] + vec[1]) == new_pos:
+            return action
+
+    return None
 
 
 def create_empty_board(size):

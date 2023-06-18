@@ -5,6 +5,9 @@ from test import test
 
 from enemies import random_enemy
 
+model_name = "agent_basic_fighter"
+
+
 def train():
     current_episode = 0
     best_score_avg = 0
@@ -14,9 +17,10 @@ def train():
     plot_mean_test_scores_test = []
     # plot_mean_test_scores_train = []
     episodes = 50000
-    env = Env(test=True, enemy=random_enemy())
+    env = Env(test=True)
 
-    agent = Agent(env.get_state_size(), env.get_action_size(), "agent")
+    agent = Agent(env.get_state_size(), env.get_action_size(), model_name)
+    # agent.load()
     agent.save()
 
     print("NB_STATES:", env.get_state_size())
@@ -65,17 +69,19 @@ def train():
                     agent.epsilon,
                 )
                 agent.save()
-                average_test_score_test = test(episodes=500, test=True)
+                average_test_score_test = test(
+                    episodes=500, test=True, model_name=model_name
+                )
                 # average_test_score_train = test(episodes=250, test=False)
                 plot_x.append(current_episode)
                 plot_mean_test_scores_test.append(average_test_score_test)
                 # plot_mean_test_scores_train.append(average_test_score_train)
                 plot(plot_mean_scores)
-                plot_test(plot_x, plot_mean_test_scores_test)
+                plot_test(plot_x, plot_mean_test_scores_test, model_name=model_name)
 
                 if average_test_score_test >= best_score_avg:
                     best_score_avg = average_test_score_test
-                    agent.save("best_move_agent")
+                    agent.save(model_name + "_best")
 
             if current_episode >= episodes:
                 return True
