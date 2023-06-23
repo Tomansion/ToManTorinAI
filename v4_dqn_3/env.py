@@ -1,5 +1,6 @@
 from random import randint, choice
 import numpy as np
+import json
 from helper import (
     VEC_MAP,
     new_pos_from_action,
@@ -38,6 +39,9 @@ from santorinai.player_examples import random_player, basic_player, first_choice
 # nb stuck self: 27
 # nb stuck other: 69
 
+with open("config.json", "r") as f:
+    conf = json.load(f)
+
 BOARD_SIZE = 5
 
 NB_ACTIONS = 8 * 8  # 8 directions + 8 build
@@ -52,11 +56,17 @@ NB_STATES += 4  # Pawns level
 
 print("NB_STATES:", NB_STATES)
 
-possible_enemy = [
-    basic_player.BasicPlayer(),
-    first_choice_player.FirstChoicePlayer(),
-    random_player.RandomPlayer(),
-]
+possible_enemy = []
+
+if conf["enemy"]["random"]:
+    possible_enemy.append(random_player.RandomPlayer())
+if conf["enemy"]["first_choice"]:
+    possible_enemy.append(first_choice_player.FirstChoicePlayer())
+if conf["enemy"]["basic"]:
+    possible_enemy.append(basic_player.BasicPlayer())
+
+for enemy in possible_enemy:
+    print("Enemy:", enemy.name())
 
 
 class Env:
@@ -83,9 +93,7 @@ class Env:
         self.board = Board(2)
 
         # Select random enemy
-        # self.enemy = first_choice_player.FirstChoicePlayer()
-        self.enemy = random_player.RandomPlayer()
-
+        self.enemy = choice(possible_enemy)
 
         def random_pos():
             return (randint(0, BOARD_SIZE - 1), randint(0, BOARD_SIZE - 1))
@@ -133,9 +141,13 @@ class Env:
 
         # Don't always start first
         if randint(0, 1) == 0:
-            enemy_won = self.move_enemy()
-            if enemy_won:
-                self.reset()
+            try:
+                enemy_won = self.move_enemy()
+                if enemy_won:
+                    self.reset()
+            except Exception as e:
+                print(e)
+                pass
 
     def move(self, action):
         action = np.argmax(action)

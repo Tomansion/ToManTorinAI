@@ -1,0 +1,8 @@
+{
+  "model_name": "agent_random_fighter_2",
+  "enemy": {
+    "random": false,
+    "first_choice": false,
+    "basic": true
+  }
+}

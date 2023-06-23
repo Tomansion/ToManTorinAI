@@ -1,11 +1,13 @@
+import json
 from env import Env
 from helper import plot, plot_test
 from agent import Agent
 from test import test
 
-from enemies import random_enemy
+with open("config.json", "r") as f:
+    conf = json.load(f)
 
-model_name = "agent_basic_fighter"
+model_name = conf["model_name"]
 
 
 def train():
@@ -20,7 +22,7 @@ def train():
     env = Env(test=True)
 
     agent = Agent(env.get_state_size(), env.get_action_size(), model_name)
-    # agent.load()
+    agent.load()
     agent.save()
 
     print("NB_STATES:", env.get_state_size())

@@ -10,19 +10,19 @@ from env import Env
 from helper import new_pos_from_action
 import numpy as np
 
-model_name = "agent_random_fighter_12000"
-
 
 class ToMantoRinAI(player.Player):
-    def __init__(self, model_name: str = model_name):
+    def __init__(self, model_name):
         super().__init__()
         self.env = Env(test=True)
+
+        self.model_name = model_name
         self.agent = Agent(
             self.env.get_state_size(), self.env.get_action_size(), model_name + "_best"
         )
 
     def name(self):
-        return "ToMantoRinAI"
+        return self.model_name.split(".pth")[0]
 
     def place_pawn(self, board: Board, pawn: Pawn) -> Tuple[int, int]:
         """
@@ -54,7 +54,7 @@ class ToMantoRinAI(player.Player):
 
         # Set the board to the env
         self.env.board = board
-        self.env.render()
+        # self.env.render()
         # Get the state and possible actions
         state, possible_actions = self.env.get_state()
 
@@ -70,27 +70,39 @@ class ToMantoRinAI(player.Player):
 
         return move_pos, build_pos
 
+    # def print_info(self):
+    #     self.agent.print_info()
+
+    # def reset_info(self):
+    #     self.agent.reset_info()
+
 
 if __name__ == "__main__":
-
     from santorinai.tester import Tester
     from santorinai.player_examples.random_player import RandomPlayer
+    import json
+
+    with open("config.json", "r") as f:
+        conf = json.load(f)
+
+    model_name = conf["model_name"]
 
     # Init the tester
     tester = Tester()
-    
+
     # tester.verbose_level = 1 # 0: no output, 1: Each game results, 2: Each move summary
     # tester.delay_between_moves = 0 # Delay between each move in seconds
     # tester.display_board = False # Display a graphical view of the board in a window
     # nb_games = 1000
 
-    tester.verbose_level = 2 # 0: no output, 1: Each game results, 2: Each move summary
-    tester.delay_between_moves = 2 # Delay between each move in seconds
-    tester.display_board = True # Display a graphical view of the board in a window
+    tester.verbose_level = 2  # 0: no output, 1: Each game results, 2: Each move summary
+    tester.delay_between_moves = 2  # Delay between each move in seconds
+    tester.display_board = True  # Display a graphical view of the board in a window
     nb_games = 1
 
     # Init the players
-    player = ToMantoRinAI()
+
+    player = ToMantoRinAI(model_name=model_name)
     random_payer = RandomPlayer()
 
     # Play 100 games

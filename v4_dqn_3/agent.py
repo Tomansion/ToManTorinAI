@@ -24,6 +24,9 @@ class Agent:
         self.model = Linear_QNet(nb_states, 256, nb_actions)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
+        self.total_choice = 0
+        self.nb_failed = 0
+
     def remember(self, state, action, reward, next_state, done):
         self.memory.append(
             (state, action, reward, next_state, done)
@@ -67,6 +70,10 @@ class Agent:
         else:
             state0 = torch.tensor(state, dtype=torch.float)
             prediction = self.model(state0)
+            # choice = torch.argmax(prediction).item()
+            # if possible_moves[choice] == 0:
+            #     self.nb_failed += 1
+            # self.total_choice += 1
 
             # Adding a constant to the prediction to avoid negative values
             prediction = prediction + abs(torch.min(prediction)) + 1
@@ -88,4 +95,15 @@ class Agent:
             torch.save(self.model.state_dict(), "models/" + name + ".pth")
 
     def load(self):
-        self.model.load_state_dict(torch.load("models/" + self.name + ".pth"))
+        try:
+            self.model.load_state_dict(torch.load("models/" + self.name + ".pth"))
+            print("Model loaded")
+        except FileNotFoundError:
+            print("No model found, creating a new one")
+
+    # def print_info(self):
+    #     print("Failed moves: ", int(100 * self.nb_failed / self.total_choice))
+
+    # def reset_info(self):
+    #     self.total_choice = 0
+    #     self.nb_failed = 0

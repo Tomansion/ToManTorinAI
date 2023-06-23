@@ -2,12 +2,17 @@ from env import Env
 from agent import Agent
 from time import sleep
 
-from enemies import random_enemy
+import json
+
+with open("config.json", "r") as f:
+    conf = json.load(f)
+
+model_name = conf["model_name"]
 
 
 def test(
     delay=0.0,
-    model_name="agent",
+    model_name=model_name,
     display=False,
     episodes=100,
     verbose=False,
@@ -29,6 +34,7 @@ def test(
         print("Testing on train env...")
 
     for i in range(episodes):
+        # agent.reset_info()
         env.reset()
 
         if display:
@@ -56,6 +62,7 @@ def test(
                 break
 
         if verbose:
+            agent.print_info()
             print("Episode:", i + 1)
             print("Average win:", nb_win / (i + 1))
 
@@ -72,16 +79,14 @@ if __name__ == "__main__":
     # profiler = cProfile.Profile()
     # profiler.enable()
 
-    model_name = "agent_random_fighter_12000"
-
     # === Small model tests
-    # test(delay=0.6, model_name=model_name, display=True, episodes=1, test=True)
+    # test(delay=3, model_name=model_name, display=True, episodes=1, test=True)
     # test(delay=0.6, display=True, episodes=1, test=False)
     # test(delay=0.6, display=True, episodes=1, test=True, best=True)
     # test(delay=0.6, display=True, episodes=1, test=False, best=True)
 
     # === Big model tests
-    test(episodes=1000, model_name=model_name, verbose=True, test=True)
+    test(episodes=10, verbose=True, test=True)
     # test(episodes=1000, verbose=False, test=False)
 
     # === Test random
