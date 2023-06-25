@@ -2,6 +2,7 @@ import torch
 import random
 from collections import deque
 from model import Linear_QNet, QTrainer
+import json
 
 MAX_MEMORY = 100000
 BATCH_SIZE = 1000
@@ -9,6 +10,11 @@ EPS_START = 1
 EPS_END = 0.1
 EPS_DECAY = 0.9995
 LR = 0.001
+
+with open("config.json", "r") as f:
+    conf = json.load(f)
+
+hidden_size = conf["model"]["hidden_size"]
 
 
 class Agent:
@@ -19,9 +25,9 @@ class Agent:
         self.n_games = 0
         self.epsilon = EPS_START
         self.gamma = 0.9  # discount rate
-        self.memory = deque(maxlen=MAX_MEMORY)  # popleft()
+        self.memory = deque(maxlen=MAX_MEMORY)
 
-        self.model = Linear_QNet(nb_states, 256, nb_actions)
+        self.model = Linear_QNet(nb_states, hidden_size, nb_actions)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
         self.total_choice = 0
@@ -82,6 +88,7 @@ class Agent:
             if display:
                 # Plot bar chart
                 import matplotlib.pyplot as plt
+
                 pred = prediction.detach().numpy()
                 plt.bar(range(len(prediction)), pred)
                 # Color the invalid moves in red
@@ -113,19 +120,15 @@ class Agent:
 
     def save(self, name=None):
         if name is None:
-            torch.save(self.model.state_dict(), "models/" + self.name + ".pth")
+            self.model.save(self.name)
         else:
-            torch.save(self.model.state_dict(), "models/" + name + ".pth")
+            self.model.save(name)
 
     def load(self, fail_if_not_found=True):
         try:
-            self.model.load_state_dict(torch.load("models/" + self.name + ".pth"))
+            # Load the model weights
+            self.model.load(self.name)
             print("Model loaded")
-        except RuntimeError:
-            # Weight mismatch
-            self.model = Linear_QNet(self.nb_states, 400, self.nb_actions)
-            self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
-            self.model.load_state_dict(torch.load("models/" + self.name + ".pth"))
         except FileNotFoundError:
             print("No model found")
             if fail_if_not_found:

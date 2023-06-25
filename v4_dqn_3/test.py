@@ -7,7 +7,7 @@ import json
 with open("config.json", "r") as f:
     conf = json.load(f)
 
-model_name = conf["model_name"]
+model_name = conf["model"]["name"]
 
 
 def test(

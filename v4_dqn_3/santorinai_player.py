@@ -113,7 +113,7 @@ class ToMantoRinAIGuided(ToMantoRinAI):
     def play_move(self, board, pawn):
         available_positions = board.get_possible_movement_positions(pawn)
         board_copy = board.copy()
-        
+
         # Check if we can win
         for pos in available_positions:
             if board.board[pos[0]][pos[1]] == 3:
@@ -152,13 +152,26 @@ class ToMantoRinAIGuided(ToMantoRinAI):
 
 if __name__ == "__main__":
     from santorinai.tester import Tester
-    from santorinai.player_examples.random_player import RandomPlayer
+    from santorinai.player_examples import (
+        random_player,
+        first_choice_player,
+        basic_player,
+    )
+    from random import choice
+
     import json
 
     with open("config.json", "r") as f:
         conf = json.load(f)
 
-    model_name = conf["model_name"]
+    model_name = conf["model"]["name"]
+    enemies = []
+    if conf["enemy"]["random"]:
+        enemies.append(random_player.RandomPlayer())
+    if conf["enemy"]["first_choice"]:
+        enemies.append(first_choice_player.FirstChoicePlayer())
+    if conf["enemy"]["basic"]:
+        enemies.append(basic_player.BasicPlayer())
 
     # Init the tester
     tester = Tester()
@@ -169,14 +182,13 @@ if __name__ == "__main__":
     # nb_games = 1000
 
     tester.verbose_level = 2  # 0: no output, 1: Each game results, 2: Each move summary
-    tester.delay_between_moves = 2  # Delay between each move in seconds
+    tester.delay_between_moves = 1  # Delay between each move in seconds
     tester.display_board = True  # Display a graphical view of the board in a window
     nb_games = 1
 
     # Init the players
 
-    player = ToMantoRinAI(model_name=model_name)
-    random_payer = RandomPlayer()
+    player = ToMantoRinAIGuided(model_name=model_name)
 
     # Play 100 games
-    tester.play_1v1(player, random_payer, nb_games=nb_games)
+    tester.play_1v1(player, choice(enemies), nb_games=nb_games)

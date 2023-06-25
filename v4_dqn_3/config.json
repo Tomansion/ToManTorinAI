@@ -1,11 +1,14 @@
 {
-  "model_name": "multy_fighter_2_150000",
+  "model": {
+    "name": "multy_fighter_best",
+    "hidden_size": 256
+  },
   "train": {
     "episodes": 100000
   },
   "enemy": {
-    "random": true,
-    "first_choice": true,
+    "random": false,
+    "first_choice": false,
     "basic": true
   }
 }
