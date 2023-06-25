@@ -39,6 +39,12 @@ from santorinai.player_examples import random_player, basic_player, first_choice
 # nb stuck self: 27
 # nb stuck other: 69
 
+# TODO:
+# - Much simpler state space
+# - Much simpler action space (only 8 * 2 actions instead of 8 * 8)
+# - Use https://stable-baselines3.readthedocs.io/
+# - Use https://github.com/DLR-RM/rl-baselines3-zoo
+
 with open("config.json", "r") as f:
     conf = json.load(f)
 

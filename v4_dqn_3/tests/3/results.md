@@ -1,0 +1,50 @@
+# AI results comparaison
+
+| | Randy Random | Firsty First | Extra BaThick! | multy_fighter_50000 | full_fighter_30000_best | random_fighter_2_50000 | multy_fighter_2_20000 | random_fighter_12000 | multy_fighter_2_150000 | random_fighter_2_best | multy_fighter_3_bigger_10000 | multy_fighter_best | multy_fighter_2_8000 | multy_fighter_3_bigger_120000 | multy_fighter_3_bigger_30000 | multy_fighter_3_bigger_120000_best | multy_fighter_2_35000 | multy_fighter_2_150000_best | multy_fighter_2_10000 | multy_fighter_2_70000 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Randy Random | - | 11 | 1 | 8 | 4 | 11 | 12 | 13 | 9 | 10 | 20 | 5 | 10 | 10 | 14 | 8 | 8 | 7 | 13 | 6 |
+| Firsty First | 90 | - | 18 | 69 | 61 | 66 | 61 | 76 | 56 | 74 | 68 | 63 | 75 | 58 | 77 | 63 | 58 | 66 | 74 | 55 |
+| Extra BaThick! | 98 | 86 | - | 80 | 78 | 84 | 88 | 87 | 87 | 83 | 89 | 66 | 86 | 86 | 87 | 76 | 79 | 72 | 82 | 85 |
+| multy_fighter_50000 | 92 | 27 | 22 | - | 39 | 65 | 65 | 60 | 43 | 49 | 59 | 54 | 66 | 57 | 67 | 52 | 46 | 52 | 55 | 53 |
+| full_fighter_30000_best | 96 | 39 | 23 | 64 | - | 62 | 75 | 72 | 60 | 60 | 81 | 51 | 68 | 69 | 76 | 62 | 71 | 57 | 74 | 68 |
+| random_fighter_2_50000 | 89 | 43 | 14 | 36 | 34 | - | 50 | 55 | 38 | 43 | 60 | 44 | 60 | 44 | 53 | 40 | 35 | 37 | 48 | 46 |
+| multy_fighter_2_20000 | 86 | 37 | 14 | 36 | 34 | 55 | - | 52 | 34 | 43 | 57 | 37 | 53 | 46 | 51 | 35 | 46 | 35 | 43 | 41 |
+| random_fighter_12000 | 86 | 25 | 12 | 37 | 31 | 46 | 51 | - | 41 | 45 | 61 | 32 | 47 | 45 | 61 | 39 | 44 | 33 | 52 | 38 |
+| multy_fighter_2_150000 | 94 | 36 | 18 | 50 | 40 | 65 | 66 | 62 | - | 54 | 64 | 47 | 64 | 61 | 66 | 54 | 51 | 48 | 57 | 53 |
+| random_fighter_2_best | 90 | 32 | 16 | 50 | 40 | 58 | 60 | 56 | 48 | - | 61 | 45 | 58 | 54 | 59 | 51 | 48 | 43 | 56 | 45 |
+| multy_fighter_3_bigger_10000 | 82 | 32 | 11 | 35 | 19 | 42 | 42 | 42 | 28 | 39 | - | 28 | 38 | 34 | 51 | 38 | 37 | 27 | 39 | 30 |
+| multy_fighter_best | 94 | 34 | 33 | 51 | 46 | 64 | 66 | 69 | 53 | 53 | 68 | - | 69 | 59 | 70 | 59 | 59 | 53 | 61 | 58 |
+| multy_fighter_2_8000 | 87 | 22 | 21 | 35 | 34 | 48 | 54 | 49 | 40 | 45 | 61 | 33 | - | 41 | 54 | 29 | 38 | 34 | 49 | 42 |
+| multy_fighter_3_bigger_120000 | 93 | 38 | 14 | 41 | 36 | 55 | 56 | 63 | 44 | 44 | 65 | 40 | 53 | - | 58 | 39 | 47 | 42 | 55 | 45 |
+| multy_fighter_3_bigger_30000 | 87 | 24 | 12 | 36 | 24 | 48 | 51 | 41 | 34 | 42 | 54 | 33 | 44 | 47 | - | 40 | 34 | 30 | 42 | 35 |
+| multy_fighter_3_bigger_120000_best | 93 | 25 | 24 | 51 | 50 | 61 | 64 | 67 | 50 | 53 | 68 | 45 | 71 | 60 | 58 | - | 55 | 50 | 58 | 58 |
+| multy_fighter_2_35000 | 92 | 56 | 22 | 53 | 34 | 64 | 57 | 63 | 51 | 47 | 63 | 46 | 60 | 58 | 65 | 40 | - | 38 | 63 | 46 |
+| multy_fighter_2_150000_best | 93 | 46 | 28 | 51 | 46 | 60 | 63 | 69 | 51 | 55 | 73 | 51 | 63 | 57 | 68 | 49 | 63 | - | 63 | 60 |
+| multy_fighter_2_10000 | 87 | 30 | 15 | 46 | 32 | 52 | 53 | 47 | 43 | 45 | 58 | 37 | 45 | 44 | 55 | 51 | 37 | 39 | - | 40 |
+| multy_fighter_2_70000 | 91 | 42 | 16 | 50 | 36 | 62 | 61 | 61 | 48 | 50 | 67 | 40 | 60 | 52 | 65 | 38 | 52 | 42 | 62 | - |
+
+
+# Average score
+
+| | Score |
+| --- | --- |
+| Extra BaThick! | 82.95 |
+| Firsty First | 64.58 |
+| full_fighter_30000_best | 64.42 |
+| multy_fighter_best | 58.74 |
+| multy_fighter_2_150000_best | 57.84 |
+| multy_fighter_2_150000 | 55.32 |
+| multy_fighter_3_bigger_120000_best | 54.53 |
+| multy_fighter_50000 | 53.95 |
+| multy_fighter_2_70000 | 52.42 |
+| multy_fighter_2_35000 | 52.16 |
+| random_fighter_2_best | 50.47 |
+| multy_fighter_3_bigger_120000 | 48.53 |
+| random_fighter_2_50000 | 45.53 |
+| multy_fighter_2_10000 | 45.05 |
+| random_fighter_12000 | 43.32 |
+| multy_fighter_2_20000 | 43.26 |
+| multy_fighter_2_8000 | 41.74 |
+| multy_fighter_3_bigger_30000 | 38.79 |
+| multy_fighter_3_bigger_10000 | 36.95 |
+| Randy Random | 9.47 |

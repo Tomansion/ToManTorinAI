@@ -32,11 +32,6 @@ class Agent:
             (state, action, reward, next_state, done)
         )  # popleft if MAX_MEMORY is reached
 
-    def change_last_memory_reward(self, reward):
-        # change the last memory reward
-        state, action, _, next_state, done = self.memory.pop()
-        self.memory.append((state, action, reward, next_state, done))
-
     def train_long_memory(self):
         if len(self.memory) > BATCH_SIZE:
             mini_sample = random.sample(self.memory, BATCH_SIZE)  # list of tuples
@@ -54,7 +49,7 @@ class Agent:
     def train_short_memory(self, state, action, reward, next_state, done):
         self.trainer.train_step(state, action, reward, next_state, done)
 
-    def get_action(self, state, possible_moves, train=False):
+    def get_action(self, state, possible_moves, train=False, display=False):
         # random moves: tradeoff exploration / exploitation
         final_move = [0] * self.nb_actions
         if train and random.random() < self.epsilon:
@@ -70,17 +65,45 @@ class Agent:
         else:
             state0 = torch.tensor(state, dtype=torch.float)
             prediction = self.model(state0)
-            # choice = torch.argmax(prediction).item()
-            # if possible_moves[choice] == 0:
             #     self.nb_failed += 1
             # self.total_choice += 1
 
+            choice = torch.argmax(prediction).item()
+
             # Adding a constant to the prediction to avoid negative values
-            prediction = prediction + abs(torch.min(prediction)) + 1
+            prediction_positive = prediction + abs(torch.min(prediction)) + 1
             # Masking the invalid moves
-            prediction = prediction * torch.tensor(possible_moves, dtype=torch.float)
-            move = int(torch.argmax(prediction).item())
+            prediction_possible = prediction_positive * torch.tensor(
+                possible_moves, dtype=torch.float
+            )
+            move = int(torch.argmax(prediction_possible).item())
             final_move[move] = 1
+
+            if display:
+                # Plot bar chart
+                import matplotlib.pyplot as plt
+                pred = prediction.detach().numpy()
+                plt.bar(range(len(prediction)), pred)
+                # Color the invalid moves in red
+                for i in range(len(prediction)):
+                    if i == move:
+                        plt.bar(i, pred[i], color="b")
+                    elif possible_moves[i] == 0:
+                        plt.bar(i, pred[i], color="r")
+
+                plt.pause(0.001)
+                plt.clf()
+
+                for i in range(len(prediction)):
+                    if i == choice:
+                        print(prediction[i], possible_moves[i], " <==")
+                    elif i == move:
+                        print(prediction[i], possible_moves[i], " ¯\_(ツ)_/¯ ")
+                    else:
+                        print(prediction[i], possible_moves[i])
+
+                if possible_moves[choice] == 0:
+                    print("Error: invalid move")
 
         return final_move
 
@@ -94,12 +117,19 @@ class Agent:
         else:
             torch.save(self.model.state_dict(), "models/" + name + ".pth")
 
-    def load(self):
+    def load(self, fail_if_not_found=True):
         try:
             self.model.load_state_dict(torch.load("models/" + self.name + ".pth"))
             print("Model loaded")
+        except RuntimeError:
+            # Weight mismatch
+            self.model = Linear_QNet(self.nb_states, 400, self.nb_actions)
+            self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
+            self.model.load_state_dict(torch.load("models/" + self.name + ".pth"))
         except FileNotFoundError:
-            print("No model found, creating a new one")
+            print("No model found")
+            if fail_if_not_found:
+                raise
 
     # def print_info(self):
     #     print("Failed moves: ", int(100 * self.nb_failed / self.total_choice))

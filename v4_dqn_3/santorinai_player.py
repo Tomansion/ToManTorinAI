@@ -18,8 +18,9 @@ class ToMantoRinAI(player.Player):
 
         self.model_name = model_name
         self.agent = Agent(
-            self.env.get_state_size(), self.env.get_action_size(), model_name + "_best"
+            self.env.get_state_size(), self.env.get_action_size(), self.model_name
         )
+        self.agent.load(fail_if_not_found=True)
 
     def name(self):
         return self.model_name.split(".pth")[0]
@@ -54,7 +55,6 @@ class ToMantoRinAI(player.Player):
 
         # Set the board to the env
         self.env.board = board
-        # self.env.render()
         # Get the state and possible actions
         state, possible_actions = self.env.get_state()
 
@@ -70,11 +70,84 @@ class ToMantoRinAI(player.Player):
 
         return move_pos, build_pos
 
-    # def print_info(self):
-    #     self.agent.print_info()
 
-    # def reset_info(self):
-    #     self.agent.reset_info()
+class ToMantoRinAIGuided(ToMantoRinAI):
+    """
+    A player that answer to simple rules + use the model to play:
+    - Place pawns randomly
+    - If there is a winning move, play it.
+    - If we can prevent the opponent from winning, do it.
+    - Listen to the model
+    """
+
+    def __init__(self, model_name):
+        super().__init__(model_name)
+
+    def name(self):
+        return self.model_name.split(".pth")[0] + "_guided"
+
+    def get_ally_pawn(self, board, our_pawn):
+        for pawn in board.pawns:
+            if (
+                pawn.number != our_pawn.number
+                and pawn.player_number == our_pawn.player_number
+            ):
+                return pawn
+
+    def get_enemy_pawns(self, board, our_pawn):
+        pawns = []
+        for pawn in board.pawns:
+            if pawn.player_number != our_pawn.player_number:
+                pawns.append(pawn)
+        return pawns
+
+    def get_winning_moves(self, board: Board, pawn):
+        available_positions = board.get_possible_movement_positions(pawn)
+        winning_moves = []
+        for pos in available_positions:
+            if board.board[pos[0]][pos[1]] == 3:
+                winning_moves.append(pos)
+
+        return winning_moves
+
+    def play_move(self, board, pawn):
+        available_positions = board.get_possible_movement_positions(pawn)
+        board_copy = board.copy()
+        
+        # Check if we can win
+        for pos in available_positions:
+            if board.board[pos[0]][pos[1]] == 3:
+                # We can win!
+                return pos, (None, None)
+
+        # Check if we can prevent the opponent from winning
+        enemy_pawns = self.get_enemy_pawns(board, pawn)
+        for enemy_pawn in enemy_pawns:
+            winning_moves = self.get_winning_moves(board, enemy_pawn)
+            for winning_move in winning_moves:
+                for available_pos in available_positions:
+                    if board.is_position_adjacent(winning_move, available_pos):
+                        # We can prevent the opponent from winning
+                        # Building on the winning move
+                        return available_pos, winning_move
+
+        # Listen to the model
+        # Set the board to the env
+        self.env.board = board_copy
+        # Get the state and possible actions
+        state, possible_actions = self.env.get_state()
+
+        # Get the action choice
+        actions_choice = self.agent.get_action(state, possible_actions)
+
+        # Get the move and build positions
+        action = np.argmax(actions_choice)
+        move_action = int(action // 8)
+        build_action = int(action % 8)
+        move_pos = new_pos_from_action(pawn.pos, move_action)
+        build_pos = new_pos_from_action(move_pos, build_action)
+
+        return move_pos, build_pos
 
 
 if __name__ == "__main__":

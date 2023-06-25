@@ -17,16 +17,12 @@ def test(
     episodes=100,
     verbose=False,
     test=True,
-    best=False,
 ):
     env = Env(test=test)
     nb_win = 0
-    if best:
-        agent = Agent(env.get_state_size(), env.get_action_size(), model_name + "_best")
-    else:
-        agent = Agent(env.get_state_size(), env.get_action_size(), model_name)
+    agent = Agent(env.get_state_size(), env.get_action_size(), model_name)
 
-    agent.load()
+    agent.load(fail_if_not_found=True)
 
     if test:
         print("Testing on test env...")
@@ -47,7 +43,7 @@ def test(
 
             # === Move
             # perform move
-            action_choice = agent.get_action(state, possible_actions)
+            action_choice = agent.get_action(state, possible_actions, display=display)
             reward, game_done = env.move(action_choice)
 
             if display:
@@ -62,7 +58,7 @@ def test(
                 break
 
         if verbose:
-            agent.print_info()
+            # agent.print_info()
             print("Episode:", i + 1)
             print("Average win:", nb_win / (i + 1))
 
@@ -80,13 +76,13 @@ if __name__ == "__main__":
     # profiler.enable()
 
     # === Small model tests
-    # test(delay=3, model_name=model_name, display=True, episodes=1, test=True)
+    test(delay=3, model_name=model_name, display=True, episodes=1, test=True)
     # test(delay=0.6, display=True, episodes=1, test=False)
     # test(delay=0.6, display=True, episodes=1, test=True, best=True)
     # test(delay=0.6, display=True, episodes=1, test=False, best=True)
 
     # === Big model tests
-    test(episodes=10, verbose=True, test=True)
+    # test(episodes=1000, verbose=False, test=True)
     # test(episodes=1000, verbose=False, test=False)
 
     # === Test random

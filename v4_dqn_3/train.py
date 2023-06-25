@@ -8,6 +8,7 @@ with open("config.json", "r") as f:
     conf = json.load(f)
 
 model_name = conf["model_name"]
+episodes = conf["train"]["episodes"]
 
 
 def train():
@@ -18,15 +19,16 @@ def train():
     plot_mean_scores = []
     plot_mean_test_scores_test = []
     # plot_mean_test_scores_train = []
-    episodes = 50000
     env = Env(test=True)
 
     agent = Agent(env.get_state_size(), env.get_action_size(), model_name)
-    agent.load()
+    agent.load(fail_if_not_found=False)
     agent.save()
 
+    print("MODEL_NAME:", model_name)
     print("NB_STATES:", env.get_state_size())
     print("NB_ACTIONS:", env.get_action_size())
+    print("EPISODES:", episodes)
 
     while True:
         # get old state
