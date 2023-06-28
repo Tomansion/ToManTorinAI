@@ -1,0 +1,13 @@
+{
+  "model": {
+    "name": "multi_fighter_ppo_60000"
+  },
+  "train": {
+    "episodes": 60000
+  },
+  "enemy": {
+    "random": false,
+    "first_choice": false,
+    "basic": true
+  }
+}
