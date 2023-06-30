@@ -1,9 +1,11 @@
 {
   "model": {
-    "name": "multi_fighter_ppo_60000"
+    "name": "multi_fighter_dqn_2_100000",
+    "algorithm": "dqn",
+    "policy": "MultiInputPolicy"
   },
   "train": {
-    "episodes": 60000
+    "episodes": 100000
   },
   "enemy": {
     "random": false,

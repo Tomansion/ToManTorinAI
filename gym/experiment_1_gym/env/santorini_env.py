@@ -1,10 +1,10 @@
-import gym
-from gym import spaces
-import numpy as np
-from time import sleep
+from gym import spaces, Env
+from stable_baselines3.common.envs import IdentityEnv
 
 from random import randint, choice
 import json
+import numpy as np
+from time import sleep
 from env.helper import (
     VEC_MAP,
     new_pos_from_action,
@@ -51,7 +51,7 @@ for enemy in possible_enemy:
     print("Enemy:", enemy.name())
 
 
-class Santorini(gym.Env):
+class Santorini(Env):
     metadata = {"render_modes": ["santorinai", "emoticons"], "render_fps": 4}
 
     def __init__(self, test=False, render_mode=None):
@@ -77,6 +77,12 @@ class Santorini(gym.Env):
         self.nb_loose = 0
         self.nb_stuck_self = 0
         self.nb_stuck_other = 0
+        self.nb_invalid_move = 0
+
+        # print("Santorini env created")
+
+        # super().__init__(space=self.action_space, ep_length=100)
+        # print("Santorini env created2")
 
     def _get_obs(self):
         # Display a the board with the pawn in the middle
@@ -129,9 +135,7 @@ class Santorini(gym.Env):
         state[state_id + 2] = self.board.board[enemy_1_pawn.pos[0]][enemy_1_pawn.pos[1]]
         state[state_id + 3] = self.board.board[enemy_2_pawn.pos[0]][enemy_2_pawn.pos[1]]
 
-        ## Tell what actions are possible
-        # possible_actions = self._get_available_actions()
-
+        # return state
         return {"observation": np.array(state, dtype=np.uint8)}
 
     def _get_info(self):
@@ -140,6 +144,7 @@ class Santorini(gym.Env):
             "nb_loose": self.nb_loose,
             "nb_stuck_self": self.nb_stuck_self,
             "nb_stuck_other": self.nb_stuck_other,
+            "nb_invalid_move": self.nb_invalid_move,
         }
 
     def reset(self, seed=None, options=None):
@@ -196,7 +201,7 @@ class Santorini(gym.Env):
                 if enemy_won:
                     self.reset()
             except Exception as e:
-                print(e)
+                print("Error in enemy move,", e)
                 pass
 
         observation = self._get_obs()
@@ -205,25 +210,46 @@ class Santorini(gym.Env):
         if self.render_mode == "emoticons":
             self.render()
 
+        # print("Reset")
+        # print(observation)
+
+        # Check the type of the observation
+        # for value in observation:
+        #     print(type(value))
+        # print(info)
+
         return observation, info
+        # return 3, info
 
     def step(self, action):
+        # valid_moves = self.action_masks()
+        # self.render()
+        # print("Action:", action)
         move_action = int(action // 8)
         build_action = int(action % 8)
+        # print("Move:", move_action)
+        # print("Build:", build_action)
+        # print("Valid moves:", valid_moves[action])
 
         self.playing_pawn = self.board.get_playing_pawn()
 
         new_move_pos = new_pos_from_action(self.playing_pawn.pos, move_action)
         new_build_pos = new_pos_from_action(new_move_pos, build_action)
 
-        # ====== Move ======
-        self.board.play_move(new_move_pos, new_build_pos)
-
         done = False
         reward = -1
 
+        # ====== Move ======
+        valid_move, reason = self.board.play_move(new_move_pos, new_build_pos)
+
+        if not valid_move:
+            # raise Exception("Invalid move, reason:", reason)
+            self.nb_invalid_move += 1
+            reward = -5
+            done = True
+
         # check goal
-        if self.board.is_game_over():
+        elif self.board.is_game_over():
             self.nb_win += 1
             reward = 10
             done = True
@@ -254,7 +280,7 @@ class Santorini(gym.Env):
 
     def render(self):
         # if not self.render_mode == "emoticons":
-            # return    
+        # return
         print()
         playing_pawn = self.board.get_playing_pawn()
         playing_pawn_nb = playing_pawn.number
@@ -318,6 +344,35 @@ class Santorini(gym.Env):
 
         if self.board.is_game_over():
             return True
+
+    def action_masks(self):
+        print("action_masks")
+        playing_pawn = self.board.get_playing_pawn()
+        possible_moves = self.board.get_possible_movement_and_building_positions(
+            playing_pawn
+        )
+
+        # Possible actions: [(move_pos, build_pos), ...]
+        # Convert to a list of actions
+
+        possible_actions = [0] * NB_ACTIONS
+
+        for move_pos, build_pos in possible_moves:
+            if move_pos is None or build_pos is None:
+                continue
+
+            move_action = action_from_pos(playing_pawn.pos, move_pos)
+            build_action = action_from_pos(move_pos, build_pos)
+
+            if move_action is None or build_action is None:
+                continue
+
+            action = move_action * 8 + build_action
+            possible_actions[action] = 1
+
+        print("possible_actions")
+        print(possible_actions)
+        return possible_actions
 
     def close(self):
         pass

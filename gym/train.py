@@ -1,39 +1,26 @@
-# Import the local gym environment
-from env.santorini_env import Santorini
-import json
-from stable_baselines3 import DQN, PPO
+from env import GymnasiumEnv
 
-with open("config.json", "r") as f:
-    conf = json.load(f)
+from stable_baselines3 import PPO
+# from stable_baselines3.common.evaluation import evaluate_policy
 
-model_name = conf["model"]["name"]
-nb_episodes = conf["train"]["episodes"]
+from sb3_contrib import MaskablePPO
+from sb3_contrib.common.envs import InvalidActionEnvDiscrete
+from sb3_contrib.common.maskable.evaluation import evaluate_policy
+from sb3_contrib.common.wrappers import ActionMasker
 
+total_timesteps = 10000
 
-print("Testing Santorinai")
+env = GymnasiumEnv()
+# env = ActionMasker(env, get_action_masks)  # Wrap to enable masking
 
-env = Santorini(test=False, render_mode=None)
-model = PPO("MultiInputPolicy", env, verbose=1)
-model.learn(progress_bar=True, log_interval=40, total_timesteps=nb_episodes * 50)
-model.save(model_name)
+model = MaskablePPO("MlpPolicy", env, gamma=0.4, seed=32, verbose=1)
+# model = PPO("MlpPolicy", env, verbose=1)
+model.learn(total_timesteps, progress_bar=True)
 
-model_loaded = PPO.load(model_name)
+# Save the trained model
+model.save("ppo_gymnasium")
 
-# Test the trained agent
-env_test = Santorini(test=True, render_mode=None)
-obs, _ = env_test.reset()
+# Evaluate the trained model
+mean_reward, std_reward = evaluate_policy(model, env=env, n_eval_episodes=10)
 
-for i in range(10000):
-    # print(f"Step {i}")
-    action, _states = model_loaded.predict(obs, deterministic=True)
-    action = int(action)
-    # print(f"Action: {action}")
-    obs, rewards, done, _, info = env_test.step(action)
-    # print(f"Reward: {rewards}, Done: {done}, Info: {info}")
-
-    env_test.render()
-    if done:
-        print(f"Step {i}")
-        print("Goal reached!", "reward=", rewards)
-        print("Info:", info)
-        obs, _ = env_test.reset()
+print(f"Mean reward: {mean_reward}, Std reward: {std_reward}")
