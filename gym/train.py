@@ -1,26 +1,35 @@
-from env import GymnasiumEnv
+from env import Santorini
+import json
 
 from stable_baselines3 import PPO
-# from stable_baselines3.common.evaluation import evaluate_policy
 
 from sb3_contrib import MaskablePPO
-from sb3_contrib.common.envs import InvalidActionEnvDiscrete
 from sb3_contrib.common.maskable.evaluation import evaluate_policy
-from sb3_contrib.common.wrappers import ActionMasker
 
-total_timesteps = 10000
+with open("config.json", "r") as f:
+    conf = json.load(f)
 
-env = GymnasiumEnv()
-# env = ActionMasker(env, get_action_masks)  # Wrap to enable masking
+model_name = conf["model"]["name"]
+nb_episodes = conf["train"]["episodes"]
 
-model = MaskablePPO("MlpPolicy", env, gamma=0.4, seed=32, verbose=1)
-# model = PPO("MlpPolicy", env, verbose=1)
-model.learn(total_timesteps, progress_bar=True)
+
+total_timesteps = nb_episodes
+
+env = Santorini()
+model = MaskablePPO(
+    "MlpPolicy", env, verbose=1, tensorboard_log="./logs/", learning_rate=0.0001
+)
+model.learn(
+    total_timesteps,
+    progress_bar=True,
+    tb_log_name=model_name,
+    reset_num_timesteps=False,
+)
 
 # Save the trained model
-model.save("ppo_gymnasium")
+model.save(model_name)
 
 # Evaluate the trained model
-mean_reward, std_reward = evaluate_policy(model, env=env, n_eval_episodes=10)
+mean_reward, std_reward = evaluate_policy(model, env=env, n_eval_episodes=1000)
 
 print(f"Mean reward: {mean_reward}, Std reward: {std_reward}")
