@@ -9,7 +9,7 @@ from santorinai_player import ToMantoRinAI, ToMantoRinAIGuided
 NB_GAMES = 1000
 
 GUIDED = True
-BASIC_ONLY = True
+BASIC_ONLY = False
 PROFILING = False
 
 MODEL_PATH = "models/"
