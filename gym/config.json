@@ -1,13 +1,15 @@
 {
   "model": {
-    "name": "multi_fighter_PPO_10000000"
+    "name": "multi_fighter_PPO_3_10M",
+    "policy": "MlpPolicy",
+    "env": 3
   },
   "train": {
     "episodes": 10000000
   },
   "enemy": {
-    "random": false,
-    "first_choice": false,
+    "random": true,
+    "first_choice": true,
     "basic": true
   }
 }

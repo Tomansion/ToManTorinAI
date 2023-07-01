@@ -1,5 +1,5 @@
-from env import Santorini
 import json
+from model_util import get_model
 
 from sb3_contrib import MaskablePPO
 from sb3_contrib.common.maskable.evaluation import evaluate_policy
@@ -8,20 +8,16 @@ with open("config.json", "r") as f:
     conf = json.load(f)
 
 model_name = conf["model"]["name"]
-
-env = Santorini()
-model = MaskablePPO("MlpPolicy", env, verbose=1)
-model.set_parameters(model_name, exact_match=True)
+model, env = get_model(model_name)
 
 # Evaluate the trained model
 mean_reward, std_reward = evaluate_policy(model, env=env, n_eval_episodes=1000)
 
 print(f"Mean reward: {mean_reward}, Std reward: {std_reward}")
-
 print(env._get_info())
 
 # Play a game with render
-env = Santorini(render=True)
+model, env = get_model(model_name, render=True)
 obs, _ = env.reset()
 done = False
 

@@ -1,0 +1,9 @@
+,Randy Random,Firsty First,Extra BaThick!,multi_fighter_PPO_10000000_guided,multi_fighter_PPO_2_10M_guided,multi_fighter_PPO_2000000_guided,multi_fighter_PPO_masked_1000000_guided,multi_fighter_PPO_3_10M_guided
+Randy Random,-,10,1,1,1,2,1,1
+Firsty First,89,-,18,14,29,26,23,18
+Extra BaThick!,98,87,-,38,41,47,54,40
+multi_fighter_PPO_10000000_guided,98,87,63,-,69,61,60,55
+multi_fighter_PPO_2_10M_guided,98,70,58,39,-,65,74,52
+multi_fighter_PPO_2000000_guided,98,73,53,44,43,-,55,46
+multi_fighter_PPO_masked_1000000_guided,98,81,50,42,35,49,-,47
+multi_fighter_PPO_3_10M_guided,99,87,65,50,63,57,56,-

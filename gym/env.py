@@ -23,7 +23,7 @@ if conf["enemy"]["basic"]:
     possible_enemy.append(basic_player.BasicPlayer())
 
 
-class Santorini(gym.Env):
+class Santorini_1(gym.Env):
     def __init__(self, render=False):
         self.action_space = spaces.Discrete(8 * 8)
 
@@ -210,3 +210,166 @@ class Santorini(gym.Env):
 
             update_board(self.window, self.board)
             sleep(1)
+
+
+class Santorini_2(Santorini_1):
+    def __init__(self, render=False):
+        super().__init__(render)
+
+        self.action_space = spaces.Discrete(8 * 8)
+
+        # Observation space consists of two 5x5 planes, represented as Box(3, 5, 5).
+        # The first 5x5 plane got 1, 2, 3 and 4 for the pawns.
+        # The second 5x5 plane got 0, 1, 2, 3 and 4 for the buildings.
+
+        self.observation_space = spaces.Box(
+            low=0, high=4, shape=(2, 5, 5), dtype=np.int8
+        )
+
+    def _get_obs(self):
+        obs = np.zeros((2, 5, 5), dtype=np.int8)
+        board = self.board.board
+
+        playing_pawn = self.board.get_playing_pawn()
+        playing_pawn_nb = playing_pawn.number
+        ally_pawn_nb = (playing_pawn_nb + 2) % 4
+        ally_pawn = self.board.pawns[ally_pawn_nb - 1]
+        enemy_1_pawn_nb = (playing_pawn_nb + 1) % 4
+        enemy_2_pawn_nb = (playing_pawn_nb + 3) % 4
+        enemy_1_pawn = self.board.pawns[enemy_1_pawn_nb - 1]
+        enemy_2_pawn = self.board.pawns[enemy_2_pawn_nb - 1]
+
+        for i in range(BOARD_SIZE):
+            for j in range(BOARD_SIZE):
+                # First plane
+                if (i, j) == playing_pawn.pos:
+                    obs[0, i, j] = 1
+                elif (i, j) == ally_pawn.pos:
+                    obs[0, i, j] = 2
+                if (i, j) == enemy_1_pawn.pos:
+                    obs[0, i, j] = 3
+                elif (i, j) == enemy_2_pawn.pos:
+                    obs[0, i, j] = 4
+
+                # Second plane
+                obs[1, i, j] = board[i][j]
+
+        return obs
+
+
+class Santorini_3(Santorini_1):
+    def __init__(self, render=False):
+        super().__init__(render)
+
+        self.action_space = spaces.Discrete(8 * 8)
+
+        # Observation space consists of 4+4 5x5 planes, represented as Box(8, 5, 5).
+        # Planes:
+        #  1: Playing pawn
+        #  2: Ally pawn
+        #  3: Enemy 1 pawn
+        #  4: Enemy 2 pawn
+        #  5: Tower level 1
+        #  6: Tower level 2
+        #  7: Tower level 3
+        #  8: Dome
+        # Full of 0 and 1
+
+        self.observation_space = spaces.Box(
+            low=0, high=1, shape=(8, 5, 5), dtype=np.int8
+        )
+
+    def _get_obs(self):
+        obs = np.zeros((8, 5, 5), dtype=np.int8)
+        board = self.board.board
+
+        playing_pawn = self.board.get_playing_pawn()
+        playing_pawn_nb = playing_pawn.number
+        ally_pawn_nb = (playing_pawn_nb + 2) % 4
+        ally_pawn = self.board.pawns[ally_pawn_nb - 1]
+        enemy_1_pawn_nb = (playing_pawn_nb + 1) % 4
+        enemy_2_pawn_nb = (playing_pawn_nb + 3) % 4
+        enemy_1_pawn = self.board.pawns[enemy_1_pawn_nb - 1]
+        enemy_2_pawn = self.board.pawns[enemy_2_pawn_nb - 1]
+
+        for i in range(BOARD_SIZE):
+            for j in range(BOARD_SIZE):
+                if (i, j) == playing_pawn.pos:
+                    obs[0, i, j] = 1
+                elif (i, j) == ally_pawn.pos:
+                    obs[1, i, j] = 1
+                elif (i, j) == enemy_1_pawn.pos:
+                    obs[2, i, j] = 1
+                elif (i, j) == enemy_2_pawn.pos:
+                    obs[3, i, j] = 1
+
+                if board[i][j] == 1:
+                    obs[4, i, j] = 1
+                elif board[i][j] == 2:
+                    obs[5, i, j] = 1
+                elif board[i][j] == 3:
+                    obs[6, i, j] = 1
+                elif board[i][j] == 4:
+                    obs[7, i, j] = 1
+
+        return obs
+
+
+class Santorini_4(Santorini_1):
+    def __init__(self, render=False):
+        super().__init__(render)
+
+        self.action_space = spaces.Discrete(8 * 8)
+
+        # Observation space consists of 3 planes centered on the playing pawn,
+        # represented as Box(4, 7, 7).
+        # Planes:
+        #  1: Inside the flashlight radius
+        #  2: Ally pawns and Enemy pawns
+        #  3: Buildings
+
+        self.flashlight_radius = 3
+
+        self.observation_space = spaces.Box(
+            low=0, high=4, shape=(3, 5, 5), dtype=np.int8
+        )
+
+    def _get_obs(self):
+        obs = np.zeros((3, 5, 5), dtype=np.int8)
+
+        playing_pawn = self.board.get_playing_pawn()
+        playing_pawn_nb = playing_pawn.number
+
+        center_pos = [playing_pawn.pos[0], playing_pawn.pos[1]]
+
+        def is_outside(board_size, pos):
+            return (
+                pos[0] < 0 or pos[0] >= board_size or pos[1] < 0 or pos[1] >= board_size
+            )
+
+        ally_pawn_nb = (playing_pawn_nb + 2) % 4
+        ally_pawn = self.board.pawns[ally_pawn_nb - 1]
+        enemy_1_pawn_nb = (playing_pawn_nb + 1) % 4
+        enemy_2_pawn_nb = (playing_pawn_nb + 3) % 4
+        enemy_1_pawn = self.board.pawns[enemy_1_pawn_nb - 1]
+        enemy_2_pawn = self.board.pawns[enemy_2_pawn_nb - 1]
+
+        for j in range(-(self.flashlight_radius - 1), self.flashlight_radius):
+            y = j + self.flashlight_radius - 1
+
+            for i in range(-(self.flashlight_radius - 1), self.flashlight_radius):
+                pos_rel = (center_pos[0] + i, center_pos[1] + j)
+                x = i + self.flashlight_radius - 1
+
+                if not is_outside(BOARD_SIZE, pos_rel):
+                    obs[0, x, y] = 1
+                    if pos_rel == ally_pawn.pos:
+                        obs[1, x, y] = 1
+                    elif pos_rel == enemy_1_pawn.pos:
+                        obs[1, x, y] = 2
+                    elif pos_rel == enemy_2_pawn.pos:
+                        obs[1, x, y] = 3
+
+                    obs[2, x, y] = self.board.board[pos_rel[0]][pos_rel[1]]
+
+        return obs
