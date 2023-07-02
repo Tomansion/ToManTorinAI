@@ -1,15 +1,20 @@
 {
   "model": {
-    "name": "multi_fighter_PPO_3_10M",
+    "name": "self_fighter_PPO_3_30M",
     "policy": "MlpPolicy",
-    "env": 3
+    "env": 4
   },
   "train": {
-    "episodes": 10000000
+    "episodes": 20000000
   },
-  "enemy": {
-    "random": true,
-    "first_choice": true,
-    "basic": true
-  }
+  "enemies": [
+    "basic"
+  ],
+  "tmp":[
+    "self2_fighter_PPO_3_32M",
+    "self_fighter_PPO_3_30M",
+    "self_fighter_PPO_4_30M",
+    "first_choice",
+    "random"
+  ]
 }

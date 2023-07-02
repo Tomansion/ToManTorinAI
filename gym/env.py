@@ -7,24 +7,17 @@ from gymnasium import spaces
 from santorinai.board import Board
 from santorinai.player_examples import random_player, basic_player, first_choice_player
 from santorinai.board_displayer.board_displayer import init_window, update_board
+from santorinai_player import ToMantoRinAI, ToMantoRinAIGuided
 from helper import action_from_pos, new_pos_from_action
 
 with open("config.json", "r") as f:
     conf = json.load(f)
 
 BOARD_SIZE = 5
-possible_enemy = []
-
-if conf["enemy"]["random"]:
-    possible_enemy.append(random_player.RandomPlayer())
-if conf["enemy"]["first_choice"]:
-    possible_enemy.append(first_choice_player.FirstChoicePlayer())
-if conf["enemy"]["basic"]:
-    possible_enemy.append(basic_player.BasicPlayer())
 
 
 class Santorini_1(gym.Env):
-    def __init__(self, render=False):
+    def __init__(self, render=False, load_enemy=True):
         self.action_space = spaces.Discrete(8 * 8)
 
         # Observation space consists of three 5x5 planes, represented as Box(3, 5, 5).
@@ -46,6 +39,20 @@ class Santorini_1(gym.Env):
         self.do_render = render
         if render:
             self.window = init_window(["AI", "Enemy"])
+
+        # Enemies
+        self.possible_enemy = []
+
+        if load_enemy:
+            for enemy in conf["enemies"]:
+                if enemy == "random":
+                    self.possible_enemy.append(random_player.RandomPlayer())
+                elif enemy == "first_choice":
+                    self.possible_enemy.append(first_choice_player.FirstChoicePlayer())
+                elif enemy == "basic":
+                    self.possible_enemy.append(basic_player.BasicPlayer())
+                else:
+                    self.possible_enemy.append(ToMantoRinAIGuided(enemy))
 
     def _get_obs(self):
         obs = np.zeros((3, 5, 5), dtype=np.int8)
@@ -90,7 +97,7 @@ class Santorini_1(gym.Env):
         self.board = Board(2)
 
         # Select random enemy
-        self.enemy = choice(possible_enemy)
+        self.enemy = choice(self.possible_enemy)
 
         # Place pawns
         possible_positions = list(range(BOARD_SIZE**2))
@@ -213,8 +220,8 @@ class Santorini_1(gym.Env):
 
 
 class Santorini_2(Santorini_1):
-    def __init__(self, render=False):
-        super().__init__(render)
+    def __init__(self, render=False, load_enemy=True):
+        super().__init__(render, load_enemy)
 
         self.action_space = spaces.Discrete(8 * 8)
 
@@ -258,8 +265,8 @@ class Santorini_2(Santorini_1):
 
 
 class Santorini_3(Santorini_1):
-    def __init__(self, render=False):
-        super().__init__(render)
+    def __init__(self, render=False, load_enemy=True):
+        super().__init__(render, load_enemy)
 
         self.action_space = spaces.Discrete(8 * 8)
 
@@ -316,7 +323,7 @@ class Santorini_3(Santorini_1):
 
 
 class Santorini_4(Santorini_1):
-    def __init__(self, render=False):
+    def __init__(self, render=False, load_enemy=True):
         super().__init__(render)
 
         self.action_space = spaces.Discrete(8 * 8)

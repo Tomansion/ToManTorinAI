@@ -20,13 +20,14 @@ ep_nb = 0
 while ep_nb < nb_episodes:
     print("Episodes: " + str(ep_nb) + "/" + str(nb_episodes))
     model.learn(
-        10000,
-        progress_bar=True,
-        tb_log_name=model_name,
+        100000,
         reset_num_timesteps=False,
+        log_interval=1000, 
+        progress_bar=True,
     )
+    # tb_log_name=model_name,
 
-    ep_nb += 10000
+    ep_nb += 100000
 
     # Save the trained model
     print("Saving model")
@@ -37,6 +38,10 @@ while ep_nb < nb_episodes:
 
     # Test the trained model
     print("Evaluating model")
+    env.nb_win = 0
+    env.nb_loose = 0
+    env.nb_stuck_other = 0
+    env.nb_stuck_self = 0
     mean_reward, std_reward = evaluate_policy(model, env=env, n_eval_episodes=100)
     print(f"Mean reward: {mean_reward}, Std reward: {std_reward}")
     print(env._get_info())

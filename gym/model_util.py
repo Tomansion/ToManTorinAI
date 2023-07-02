@@ -1,11 +1,11 @@
-from env import Santorini_1, Santorini_2, Santorini_3, Santorini_4
 import json, os
 
 from sb3_contrib import MaskablePPO
-from sb3_contrib.common.maskable.evaluation import evaluate_policy
 
 
-def get_model(model_name=None, render=False):
+def get_model(model_name=None, render=False, load_enemy=True):
+    from env import Santorini_1, Santorini_2, Santorini_3, Santorini_4
+
     if model_name is None:
         # Load from config
         with open("config.json", "r") as f:
@@ -24,13 +24,13 @@ def get_model(model_name=None, render=False):
         model_env = conf["env"]
 
     if model_env == 1:
-        env = Santorini_1(render)
+        env = Santorini_1(render, load_enemy)
     elif model_env == 2:
-        env = Santorini_2(render)
+        env = Santorini_2(render, load_enemy)
     elif model_env == 3:
-        env = Santorini_3(render)
+        env = Santorini_3(render, load_enemy)
     elif model_env == 4:
-        env = Santorini_4(render)
+        env = Santorini_4(render, load_enemy)
     else:
         raise ValueError("Invalid env")
 
@@ -38,9 +38,10 @@ def get_model(model_name=None, render=False):
         model_policy,
         env,
         verbose=1,
-        tensorboard_log="./logs/",
         learning_rate=0.0001,
+        
     )
+    # tensorboard_log="./logs/",
 
     # Add parameters if model exists
     if os.path.exists("models/" + model_name + "/" + model_name + ".zip"):

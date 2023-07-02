@@ -1,9 +1,12 @@
 import os
+import csv
+import plotly.graph_objects as go
 from santorinai.tester import Tester
+from santorinai.player import Player
 from santorinai.player_examples.random_player import RandomPlayer
 from santorinai.player_examples.first_choice_player import FirstChoicePlayer
 from santorinai.player_examples.basic_player import BasicPlayer
-from santorinai_player import ToMantoRinAI, ToMantoRinAIGuided
+from santorinai_player import ToMantoRinAI, ToMantoRinAIGuided, ToMantoRinAIGuidedPlaced
 
 
 NB_GAMES = 1000
@@ -17,26 +20,56 @@ MODEL_PATH = "models/"
 # Load all models
 model_list = os.listdir(MODEL_PATH)
 bot_list = [RandomPlayer(), FirstChoicePlayer(), BasicPlayer()]
-ai_list = []
+ai_list: list[Player] = []
 for model_name in model_list:
-    if GUIDED:
-        ai_list.append(ToMantoRinAIGuided(model_name))
-    else:
-        ai_list.append(ToMantoRinAI(model_name))
+    # if GUIDED:
+    #     ai_list.append(ToMantoRinAIGuided(model_name))
+    # else:
+    #     ai_list.append(ToMantoRinAI(model_name))
+    ai_list.append(ToMantoRinAIGuidedPlaced(model_name))
+
+# Guided:
+# 1. self_fighter_PPO_3_30M_guided: 77%
+# 2. self2_fighter_PPO_3_40M_guided: 73%
+# 3. multi_fighter_PPO_3_20M_guided: 69%
+# 4. self_fighter_PPO_4_30M_guided: 67%
+# 5. multi_fighter_PPO_4_10M_guided: 62%
+# 6. multi_fighter_PPO_4_10M2_guided: 61%
+# 7. multi_fighter_PPO_10000000_guided: 60%
+# 8. self2_fighter_PPO_4_40M_guided: 53%
+
+# Placed:
+# 1. self_fighter_PPO_3_30M_placed: 85%
+# 2. self2_fighter_PPO_3_40M_placed: 83%
+# 3. self_fighter_PPO_4_30M_placed: 82%
+# 4. multi_fighter_PPO_3_20M_placed: 79%
+# 5. multi_fighter_PPO_10000000_placed: 73%
+# 6. multi_fighter_PPO_4_10M2_placed: 73%
+# 7. multi_fighter_PPO_4_10M_placed: 72%
+# 8. self2_fighter_PPO_4_40M_placed: 68%
+
+# Best overall:
+# self2_fighter_PPO_3_40M_placed: 77.50
+# multi_fighter_PPO_3_20M_placed: 71.50
+# self_fighter_PPO_4_30M_placed: 70.67
+# self_fighter_PPO_3_30M_placed: 68.00
+
+
+
 
 # Profiling
-if PROFILING:
-    import pstats
-    import cProfile
+# if PROFILING:
+#     import pstats
+#     import cProfile
 
-    profiler = cProfile.Profile()
-    profiler.enable()
+#     profiler = cProfile.Profile()
+#     profiler.enable()
 
 # Init the tester
 tester = Tester()
-tester.verbose_level = 0  # 0: no output, 1: Each game results, 2: Each move summary
-tester.delay_between_moves = 0  # Delay between each move in seconds
-tester.display_board = False  # Display a graphical view of the board in a window
+tester.verbose_level = 0
+tester.delay_between_moves = 0
+tester.display_board = False
 
 # ==== Play each AI against the basic AI ====
 
@@ -74,7 +107,7 @@ total_tests = len(ai_list) * (len(ai_list) - 1)
 test_nb = 0
 
 # Init a 2D array to store the results
-results = [["-" for _ in range(len(ai_list))] for _ in range(len(ai_list))]
+results = [[1 for _ in range(len(ai_list))] for _ in range(len(ai_list))]
 columns = []
 
 
@@ -106,11 +139,11 @@ for i, p1 in enumerate(ai_list):
         # except Exception as e:
         #     pass
 
-if PROFILING:
-    profiler.disable()
-    stats = pstats.Stats(profiler)
-    stats.sort_stats(pstats.SortKey.TIME)
-    stats.dump_stats(filename="stats.prof")
+# if PROFILING:
+#     profiler.disable()
+#     stats = pstats.Stats(profiler)
+#     stats.sort_stats(pstats.SortKey.TIME)
+#     stats.dump_stats(filename="stats.prof")
 
 
 # Calculate the average score for each player
@@ -135,13 +168,12 @@ print("\n\nAverage score:")
 for name, score in avg_score_results:
     print(f"{name}: {score:.2f}")
 
-## === Export ===
+# === Export ===
 export_name = "tests/results"
 if GUIDED:
     export_name += "_guided"
 
 # Save the results as a csv file
-import csv
 
 with open(export_name + ".csv", "w") as f:
     writer = csv.writer(f)
@@ -183,8 +215,6 @@ with open(export_name + ".md", "w") as f:
         f.write(f"| {name} | {score:.2f} |\n")
 
 # Plot the results
-import plotly.graph_objects as go
-
 fig = go.Figure(data=go.Heatmap(z=results, x=columns, y=columns))
 
 # Add the number in the cells
